@@ -10,6 +10,8 @@ Usage: scripts/coverage_trend.py [--repo owner/name] [--branch main] [-o PATH]
 """
 import argparse
 import json
+import pathlib
+import sys
 import urllib.request
 
 API = "https://api.codecov.io/api/v2/github/{owner}/repos/{repo}/commits"
@@ -98,7 +100,13 @@ def main() -> None:
     parser.add_argument("-o", "--output", default="docs/coverage-trend.svg")
     args = parser.parse_args()
     owner, repo = args.repo.split("/", 1)
-    render(fetch(owner, repo, args.branch, args.limit), args.output)
+    # Keep the output inside the repository: the path comes from the command
+    # line and would otherwise be free to point anywhere on the filesystem.
+    root = pathlib.Path(__file__).resolve().parent.parent
+    output = (root / args.output).resolve()
+    if root not in output.parents:
+        sys.exit(f"refusing to write outside the repository: {output}")
+    render(fetch(owner, repo, args.branch, args.limit), str(output))
 
 
 if __name__ == "__main__":

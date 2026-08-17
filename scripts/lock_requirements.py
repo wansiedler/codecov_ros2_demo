@@ -15,6 +15,7 @@ import json
 import pathlib
 import subprocess
 import sys
+import tempfile
 import urllib.request
 
 TOOLS = {
@@ -28,13 +29,16 @@ OUTPUT_DIR = pathlib.Path(__file__).resolve().parent.parent / "requirements"
 
 def resolve(spec: str) -> list[tuple[str, str]]:
     """Returns the full dependency closure of `spec` as (name, version) pairs."""
-    report = pathlib.Path(f"/tmp/pip-report-{spec.split('==')[0]}.json")
-    subprocess.run(
-        ["python3", "-m", "pip", "install", "--dry-run", "--ignore-installed",
-         "--quiet", "--only-binary", ":all:", "--report", str(report), spec],
-        check=True,
-    )
-    data = json.loads(report.read_text())
+    # A private directory rather than a predictable path under /tmp, which any
+    # local user could pre-create or replace between the two calls.
+    with tempfile.TemporaryDirectory() as workdir:
+        report = pathlib.Path(workdir) / "pip-report.json"
+        subprocess.run(
+            ["python3", "-m", "pip", "install", "--dry-run", "--ignore-installed",
+             "--quiet", "--only-binary", ":all:", "--report", str(report), spec],
+            check=True,
+        )
+        data = json.loads(report.read_text())
     return sorted((i["metadata"]["name"], i["metadata"]["version"]) for i in data["install"])
 
 

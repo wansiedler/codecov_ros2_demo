@@ -81,9 +81,10 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
   const auto reached_lookahead = [this, &pose](const Point2D & point) {
     return distance(point, pose) >= config_.lookahead;
   };
-  const auto found = std::find_if(
-    path_.begin() + static_cast<std::ptrdiff_t>(closest), path_.end(), reached_lookahead);
-  if (found != path_.end()) {
+  if (
+    const auto found = std::find_if(
+      path_.begin() + static_cast<std::ptrdiff_t>(closest), path_.end(), reached_lookahead);
+    found != path_.end()) {
     return *found;
   }
   return path_.back();
@@ -92,7 +93,7 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
 std::optional<double> PurePursuit::curvature(const Pose2D & pose) const
 {
   const std::optional<Point2D> target = lookahead_point(pose);
-  if (!target) {
+  if (!target.has_value()) {
     return std::nullopt;
   }
 
@@ -108,7 +109,7 @@ std::optional<double> PurePursuit::angular_velocity(
   const Pose2D & pose, double linear_velocity) const
 {
   const std::optional<double> arc = curvature(pose);
-  if (!arc) {
+  if (!arc.has_value()) {
     return std::nullopt;
   }
   if (at_goal(pose)) {
