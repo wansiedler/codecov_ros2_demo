@@ -28,6 +28,11 @@ namespace
 
 constexpr double kTolerance = 1e-9;
 
+// M_PI and friends are POSIX extensions that glibc hides under strict
+// -std=c++17, so spell the constants out instead of relying on <cmath>.
+constexpr double kPi = 3.14159265358979323846;
+constexpr double kHalfPi = kPi / 2.0;
+
 PurePursuitConfig default_config()
 {
   PurePursuitConfig config;
@@ -132,11 +137,11 @@ TEST(PurePursuit, AccountsForTheRobotHeading)
   controller.set_path({{0.0, 1.0}});
 
   // Facing +y, so the point one metre along +y is straight ahead.
-  const Pose2D facing_north{0.0, 0.0, M_PI_2};
+  const Pose2D facing_north{0.0, 0.0, kHalfPi};
   EXPECT_NEAR(*controller.curvature(facing_north), 0.0, kTolerance);
 
   // Facing -x, so the same point now sits to the right.
-  const Pose2D facing_west{0.0, 0.0, M_PI};
+  const Pose2D facing_west{0.0, 0.0, kPi};
   EXPECT_NEAR(*controller.curvature(facing_west), -2.0, kTolerance);
 }
 
