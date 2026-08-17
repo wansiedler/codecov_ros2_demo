@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <limits>
 #include <numbers>
 #include <vector>
@@ -209,6 +210,23 @@ TEST(PurePursuit, ReportsNoCommandForNonFiniteGeometry)
   controller.set_path({{1.0, 1.0}});
   EXPECT_FALSE(controller.angular_velocity(Pose2D{nan, 0.0, 0.0}, 1.0).has_value());
   EXPECT_FALSE(controller.angular_velocity(Pose2D{}, nan).has_value());
+}
+
+TEST(PurePursuit, SurvivesNonFinitePointsInThePath)
+{
+  PurePursuit controller{default_config()};
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+
+  // A NaN distance compares false in both directions, which breaks the strict
+  // weak ordering that min_element requires - the search would be undefined
+  // rather than merely wrong.
+  controller.set_path({{nan, 0.0}, {2.0, 0.0}, {nan, nan}, {0.5, 0.0}});
+
+  EXPECT_TRUE(controller.lookahead_point(Pose2D{}).has_value());
+  const auto command = controller.angular_velocity(Pose2D{}, 1.0);
+  if (command.has_value()) {
+    EXPECT_TRUE(std::isfinite(*command));
+  }
 }
 
 TEST(PurePursuit, ReplacingThePathClearsTheOldOne)
