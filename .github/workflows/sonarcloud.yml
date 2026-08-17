@@ -54,38 +54,39 @@ jobs:
           rosdep update
           rosdep install --from-paths src --ignore-src -y
 
-      - name: Install the Sonar scanner and build wrapper
+      # The C++ analyser reads compile_commands.json, which colcon already
+      # exports, so only the scanner CLI is needed - no build wrapper.
+      - name: Install the Sonar scanner
         if: steps.config.outputs.enabled == 'true'
         run: |
           curl --proto '=https' --tlsv1.2 -sSLo /tmp/scanner.zip \
             https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-x64.zip
-          curl --proto '=https' --tlsv1.2 -sSLo /tmp/wrapper.zip \
-            https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -q /tmp/scanner.zip -d /opt
-          unzip -q /tmp/wrapper.zip -d /opt
           echo "/opt/sonar-scanner-6.2.1.4610-linux-x64/bin" >> "$GITHUB_PATH"
-          echo "/opt/build-wrapper-linux-x86" >> "$GITHUB_PATH"
 
-      - name: Build under the build wrapper and collect coverage
+      - name: Build, test and produce gcov reports
         if: steps.config.outputs.enabled == 'true'
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          build-wrapper-linux-x86-64 --out-dir bw-output \
-            colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
-          colcon test --ctest-args -R "^test_" || true
-          lcov --capture --initial --directory build --output-file coverage.base \
-            --ignore-errors mismatch,gcov,unused,empty,negative
-          lcov --capture --directory build --output-file coverage.run \
-            --ignore-errors mismatch,gcov,unused,empty,negative
-          lcov --add-tracefile coverage.base --add-tracefile coverage.run \
-            --output-file coverage.info --ignore-errors mismatch,gcov,unused,empty,negative
+          colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          colcon test --ctest-args -R "^test_"
+          # Sonar reads .gcov text reports rather than the lcov tracefile.
+          mkdir -p gcov
+          find build -name '*.gcda' -exec gcov -p -b {} + > /dev/null
+          mv ./*.gcov gcov/ 2>/dev/null || true
+          ls gcov | head
 
       - name: Run the analysis
         if: steps.config.outputs.enabled == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: sonar-scanner -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
+          SONAR_HOST_URL: https://sonarcloud.io
+        run: |
+          sonar-scanner \
+            -Dsonar.cfamily.compile-commands=build/nav_utils/compile_commands.json \
+            -Dsonar.cfamily.gcov.reportsPath=gcov
 
       - name: Explain the skip
         if: steps.config.outputs.enabled != 'true'
