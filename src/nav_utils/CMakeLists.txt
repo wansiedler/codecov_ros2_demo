@@ -36,6 +36,7 @@ add_library(nav_utils_core
   src/velocity_limiter.cpp
   src/battery_monitor.cpp
   src/safety_zone.cpp
+  src/pure_pursuit.cpp
 )
 target_include_directories(nav_utils_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -65,6 +66,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_safety_zone test/test_safety_zone.cpp)
   target_link_libraries(test_safety_zone nav_utils_core)
+
+  ament_add_gtest(test_pure_pursuit test/test_pure_pursuit.cpp)
+  target_link_libraries(test_pure_pursuit nav_utils_core)
 
   # Linters are registered as ctest tests, so `colcon test` runs style, licence
   # and static analysis checks next to the unit tests. Selected explicitly
