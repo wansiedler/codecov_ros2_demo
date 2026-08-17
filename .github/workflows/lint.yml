@@ -7,9 +7,6 @@ on:
   pull_request:
   workflow_dispatch: {}
 
-permissions:
-  contents: read
-
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
@@ -23,28 +20,32 @@ jobs:
     name: pre-commit
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: '3.12'
       - name: Install tools used by the local hooks
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cppcheck
-      - uses: pre-commit/action@v3.0.1
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
 
   clang-format:
     name: clang-format
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: '3.12'
       # Pinned to the same version the pre-commit hook uses, so local and CI
       # formatting never disagree over a compiler release.
       - name: Install clang-format
-        run: pip install "clang-format==22.1.8"
+        run: 'pip install --only-binary=:all: "clang-format==22.1.8"'
       - name: Check formatting
         run: |
           find src \( -name '*.cpp' -o -name '*.hpp' \) \
@@ -55,8 +56,10 @@ jobs:
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
     timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Install linters
         run: |
@@ -95,8 +98,10 @@ jobs:
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
     timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Install clang-tidy
         run: |
