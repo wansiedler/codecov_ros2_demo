@@ -5,8 +5,11 @@
 ```bash
 pipx install pre-commit
 pre-commit install --install-hooks
-pre-commit install --hook-type commit-msg   # enables the commitizen check
 ```
+
+One command is enough: `default_install_hook_types` in the config wires all
+three stages - the file checks before the commit, the message check on the
+message itself, and a check of the whole range before a push.
 
 ## Commit messages
 
