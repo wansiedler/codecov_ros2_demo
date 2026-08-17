@@ -34,8 +34,7 @@ public:
     // constructed, so it cannot move into the initialiser list.
     publisher_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     subscription_ = create_subscription<geometry_msgs::msg::Twist>(
-      "cmd_vel_raw", 10,
-      [this](const geometry_msgs::msg::Twist::SharedPtr msg) { on_command(*msg); });
+      "cmd_vel_raw", 10, [this](const geometry_msgs::msg::Twist & msg) { on_command(msg); });
   }
 
 private:
