@@ -11,9 +11,9 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: mixed-line-ending
-        args: [--fix=lf]
+        args: ["--fix=lf"]
       - id: check-added-large-files
-        args: [--maxkb=512]
+        args: ["--maxkb=512"]
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-executables-have-shebangs
@@ -26,7 +26,7 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c++, c]
-        args: [--style=file]
+        args: ["--style=file"]
 
   - repo: https://github.com/cpplint/cpplint
     rev: 2.0.2
@@ -40,19 +40,19 @@ repos:
     rev: v0.6.13
     hooks:
       - id: cmake-lint
-        args: [--line-width=100, --disabled-codes, C0103, C0113]
+        args: ["--line-width=100", "--disabled-codes", "C0103", "C0113"]
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
       - id: codespell
-        args: [--ignore-words-list=ba,inout,nd]
+        args: ["--ignore-words-list=ba,inout,nd"]
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.38.0
     hooks:
       - id: yamllint
-        args: [--strict]
+        args: ["--strict"]
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
@@ -63,6 +63,30 @@ repos:
     rev: v8.30.0
     hooks:
       - id: gitleaks
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.34.1
+    hooks:
+      - id: check-github-workflows
+      - id: check-dependabot
+
+  # Enforces Conventional Commits, which is what feeds the changelog and the
+  # release-please version bumps.
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.10.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
 
   - repo: local
     hooks:

@@ -7,15 +7,25 @@ on:
   pull_request:
   schedule:
     - cron: '17 4 * * 1'   # weekly, so new advisories surface without a push
+  workflow_dispatch: {}
 
 permissions:
   contents: read
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Etc/UTC
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   codeql:
     name: CodeQL (c-cpp)
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
+    timeout-minutes: 45
     permissions:
       contents: read
       security-events: write
@@ -28,6 +38,11 @@ jobs:
           apt-get install -y --no-install-recommends \
             build-essential cmake git python3-colcon-common-extensions
           rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
 
       - uses: github/codeql-action/init@v3
         with:
@@ -48,6 +63,7 @@ jobs:
   secret-scan:
     name: gitleaks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,6 +82,7 @@ jobs:
   filesystem-scan:
     name: trivy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       security-events: write
@@ -73,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Scan for vulnerabilities, secrets and misconfigurations
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: fs
           scanners: vuln,secret,misconfig
@@ -87,9 +104,78 @@ jobs:
           sarif_file: trivy-results.sarif
           category: trivy
 
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan with the community rule sets
+        run: |
+          semgrep scan --config p/default --config p/c --config p/secrets \
+            --config p/github-actions --sarif --output semgrep.sarif
+
+      - name: Publish results to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  osv-scanner:
+    name: OSV scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan the sources for known vulnerabilities
+        run: |
+          curl -sSfL -o /tmp/osv-scanner \
+            https://github.com/google/osv-scanner/releases/download/v2.0.2/osv-scanner_linux_amd64
+          sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
+          # Exit code 0 (nothing found) and 1 (findings) are both reported via
+          # SARIF; anything else is a real scanner failure.
+          osv-scanner scan source --recursive --format sarif --output osv.sarif . \
+            || [ $? -eq 1 ]
+
+      - name: Publish results to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: osv.sarif
+          category: osv-scanner
+
+  sbom:
+    name: SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # the dependency snapshot is written to the repository
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate an SPDX SBOM and submit the dependency snapshot
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          artifact-name: nav_utils.spdx.json
+          dependency-snapshot: true
+
   scorecard:
     name: OpenSSF Scorecard
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.event_name != 'pull_request'
     permissions:
       contents: read

@@ -1,0 +1,8 @@
+---
+default: true
+MD013:
+  line_length: 100
+  tables: false
+  code_blocks: false
+MD033: false   # inline HTML is used for the coverage graph table
+MD041: false   # badges precede the first heading
