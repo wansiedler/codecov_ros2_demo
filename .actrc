@@ -1,4 +1,11 @@
 # Defaults for running the workflows locally with nektos/act:
 #   act -j build-test-coverage
+#
+# ThreadSanitizer refuses to start when the kernel randomises more than 28
+# address bits, which is the default on 6.x. Before running the tsan job:
+#   sudo sysctl -w vm.mmap_rnd_bits=28
+#
+# The artifact upload steps are skipped under act (see the env.ACT guards):
+# act cannot inject node into a job container, and ros:jazzy-ros-base has none.
 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 --container-architecture linux/amd64
