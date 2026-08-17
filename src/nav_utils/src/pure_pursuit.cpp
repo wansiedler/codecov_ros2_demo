@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <optional>
 #include <ranges>
 #include <utility>
@@ -66,8 +67,16 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
 
   // Start from the point closest to the robot, otherwise a pose near the end of
   // the path would match an early point that lies behind it and steer backwards.
-  const auto closest = std::ranges::min_element(
-    path_, {}, [&pose](const Point2D & point) { return distance(point, pose); });
+  //
+  // The projection maps a non-finite distance to infinity rather than letting a
+  // NaN reach the comparison: NaN compares false both ways, which destroys the
+  // strict weak ordering min_element requires and makes the call undefined.
+  // Infinity keeps the ordering total and pushes such a point to the back,
+  // where curvature() then rejects it.
+  const auto closest = std::ranges::min_element(path_, {}, [&pose](const Point2D & point) {
+    const double candidate = distance(point, pose);
+    return std::isfinite(candidate) ? candidate : std::numeric_limits<double>::infinity();
+  });
 
   // From there, the first point at least one lookahead away; the goal itself
   // when the remaining path is shorter than that, so the robot drives it out.
