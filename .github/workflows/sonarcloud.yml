@@ -54,8 +54,9 @@ jobs:
           rosdep update
           rosdep install --from-paths src --ignore-src -y
 
-      # The C++ analyser reads compile_commands.json, which colcon already
-      # exports, so only the scanner CLI is needed - no build wrapper.
+      # The C++ analyser reads the compile_commands.json that the build step
+      # below requests via -DCMAKE_EXPORT_COMPILE_COMMANDS=ON, so only the
+      # scanner CLI is needed - no build wrapper.
       - name: Install the Sonar scanner
         if: steps.config.outputs.enabled == 'true'
         run: |
@@ -82,7 +83,6 @@ jobs:
         if: steps.config.outputs.enabled == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
         run: |
           sonar-scanner \
             -Dsonar.cfamily.compile-commands=build/nav_utils/compile_commands.json \
