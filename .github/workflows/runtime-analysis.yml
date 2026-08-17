@@ -42,26 +42,11 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/ros-workspace
 
-      - name: Build instrumented binaries
+      - name: Build and test under the sanitizer
         shell: bash
         env:
           SANITIZE: ${{ matrix.sanitize }}
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon build --event-handlers console_direct+ \
-            --cmake-args -DCMAKE_BUILD_TYPE=Debug "-DSANITIZE=$SANITIZE"
-
-      - name: Run tests under the sanitizer
-        shell: bash
-        env:
-          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1
-          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
-          TSAN_OPTIONS: halt_on_error=1
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon test --event-handlers console_direct+ --packages-select nav_utils \
-            --ctest-args -R "^test_"
-          colcon test-result --verbose
+        run: make sanitize
 
   valgrind:
     name: valgrind memcheck
@@ -78,56 +63,9 @@ jobs:
         with:
           packages: valgrind
 
-      - name: Build
-        shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Debug
-
       - name: Run the unit tests under memcheck
         shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          mkdir -p memcheck
-          status=0
-          for test_binary in build/nav_utils/test_*; do
-            [ -x "$test_binary" ] || continue
-            name=$(basename "$test_binary")
-            echo "::group::valgrind $name"
-            valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite,indirect \
-              --track-origins=yes --error-exitcode=42 \
-              --xml=yes --xml-file="memcheck/$name.xml" "$test_binary" || status=$?
-            echo "::endgroup::"
-          done
-
-          # --xml=yes silences valgrind's text output, so without this the step
-          # only shows the gtest output and the findings stay in the artifact.
-          echo "::group::memcheck summary"
-          python3 - <<'SUMMARY'
-          import glob
-          import xml.etree.ElementTree as ET
-
-          for path in sorted(glob.glob("memcheck/*.xml")):
-              root = ET.parse(path).getroot()
-              errors = root.findall("error")
-              name = path.split("/")[-1].removesuffix(".xml")
-              if not errors:
-                  print(f"{name}: clean")
-                  continue
-              print(f"{name}: {len(errors)} error(s)")
-              for error in errors:
-                  kind = error.findtext("kind", "?")
-                  what = error.findtext("what") or error.findtext("xwhat/text") or ""
-                  frame = error.find("stack/frame")
-                  where = ""
-                  if frame is not None:
-                      where = (f"{frame.findtext('fn', '?')} "
-                               f"({frame.findtext('file', '?')}:{frame.findtext('line', '?')})")
-                  print(f"  {kind}: {what} {where}")
-          SUMMARY
-          echo "::endgroup::"
-
-          exit $status
+        run: make memcheck
 
       - name: Upload the memcheck reports
         # act cannot inject node into a job container, so the Node based

@@ -104,14 +104,6 @@ jobs:
         with:
           packages: clang-tidy
 
-      - name: Build to generate compile_commands.json
-        shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-
       - name: Analyse the package sources
         shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          run-clang-tidy -p build/nav_utils -quiet "$(pwd)/src/nav_utils/src/.*\.cpp"
+        run: make tidy
