@@ -31,7 +31,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install build and coverage tooling
         run: |
@@ -95,6 +95,7 @@ jobs:
             --ignore-errors inconsistent,corrupt
 
       - name: Upload the browsable HTML report
+        if: ${{ !env.ACT }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: coverage-html
@@ -102,7 +103,9 @@ jobs:
           retention-days: 30
 
       - name: Upload the JUnit test results
-        if: always()
+        # act cannot inject node into a job container, so the Node based
+        # artifact actions only run on GitHub. env.ACT is set by act.
+        if: always() && !env.ACT
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: test-results
