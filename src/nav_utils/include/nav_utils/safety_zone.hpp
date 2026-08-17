@@ -15,6 +15,8 @@
 #ifndef NAV_UTILS__SAFETY_ZONE_HPP_
 #define NAV_UTILS__SAFETY_ZONE_HPP_
 
+#include <cstdint>
+
 namespace nav_utils
 {
 
@@ -41,13 +43,13 @@ public:
   explicit SafetyZone(const ZoneRadii & radii);
 
   /// Zone the given obstacle distance falls into.
-  Zone classify(double obstacle_distance) const;
+  [[nodiscard]] Zone classify(double obstacle_distance) const;
 
   /// Speed scaling factor in [0, 1] for the given obstacle distance.
-  double speed_scale(double obstacle_distance) const;
+  [[nodiscard]] double speed_scale(double obstacle_distance) const;
 
   /// Scales @p velocity down so it is safe for the given obstacle distance.
-  double apply(double velocity, double obstacle_distance) const;
+  [[nodiscard]] double apply(double velocity, double obstacle_distance) const;
 
 private:
   ZoneRadii radii_;

@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Scan for vulnerabilities, secrets and misconfigurations
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scanners: vuln,secret,misconfig
@@ -141,12 +141,20 @@ jobs:
       - name: Scan the sources for known vulnerabilities
         run: |
           curl -sSfL -o /tmp/osv-scanner \
-            https://github.com/google/osv-scanner/releases/download/v2.0.2/osv-scanner_linux_amd64
+            https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
           sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
-          # Exit code 0 (nothing found) and 1 (findings) are both reported via
-          # SARIF; anything else is a real scanner failure.
-          osv-scanner scan source --recursive --format sarif --output osv.sarif . \
-            || [ $? -eq 1 ]
+          # Exit 0 means nothing found and 1 means findings, both reported
+          # through SARIF; 128 means no supported manifest exists, which is the
+          # normal case for a pure C++ workspace. Anything else is a failure.
+          set +e
+          osv-scanner scan source --recursive --format sarif --output osv.sarif .
+          code=$?
+          set -e
+          [ -s osv.sarif ] || echo '{"version":"2.1.0","runs":[]}' > osv.sarif
+          case "$code" in
+            0 | 1 | 128) exit 0 ;;
+            *) exit "$code" ;;
+          esac
 
       - name: Publish results to the Security tab
         if: always()

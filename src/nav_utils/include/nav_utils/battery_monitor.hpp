@@ -15,6 +15,7 @@
 #ifndef NAV_UTILS__BATTERY_MONITOR_HPP_
 #define NAV_UTILS__BATTERY_MONITOR_HPP_
 
+#include <cstdint>
 #include <string>
 
 namespace nav_utils
@@ -39,7 +40,7 @@ public:
 
   /// Estimates the state of charge in percent from the measured pack voltage,
   /// using a linear approximation between 3.2 V and 4.2 V per cell.
-  double percent_from_voltage(double pack_voltage) const;
+  [[nodiscard]] double percent_from_voltage(double pack_voltage) const;
 
   /// Feeds a new voltage measurement and returns the resulting state.
   BatteryState update(double pack_voltage);
