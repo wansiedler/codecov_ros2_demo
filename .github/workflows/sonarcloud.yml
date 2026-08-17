@@ -24,7 +24,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0   # Sonar needs the history for new-code detection
 
@@ -54,38 +54,62 @@ jobs:
           rosdep update
           rosdep install --from-paths src --ignore-src -y
 
-      - name: Install the Sonar scanner and build wrapper
+      # The C++ analyser reads the compile_commands.json that the build step
+      # below requests via -DCMAKE_EXPORT_COMPILE_COMMANDS=ON, so only the
+      # scanner CLI is needed - no build wrapper.
+      - name: Install the Sonar scanner
         if: steps.config.outputs.enabled == 'true'
         run: |
           curl --proto '=https' --tlsv1.2 -sSLo /tmp/scanner.zip \
             https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-x64.zip
-          curl --proto '=https' --tlsv1.2 -sSLo /tmp/wrapper.zip \
-            https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -q /tmp/scanner.zip -d /opt
-          unzip -q /tmp/wrapper.zip -d /opt
           echo "/opt/sonar-scanner-6.2.1.4610-linux-x64/bin" >> "$GITHUB_PATH"
-          echo "/opt/build-wrapper-linux-x86" >> "$GITHUB_PATH"
 
-      - name: Build under the build wrapper and collect coverage
+      - name: Build, test and produce gcov reports
         if: steps.config.outputs.enabled == 'true'
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          build-wrapper-linux-x86-64 --out-dir bw-output \
-            colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
-          colcon test --ctest-args -R "^test_" || true
-          lcov --capture --initial --directory build --output-file coverage.base \
-            --ignore-errors mismatch,gcov,unused,empty,negative
-          lcov --capture --directory build --output-file coverage.run \
-            --ignore-errors mismatch,gcov,unused,empty,negative
-          lcov --add-tracefile coverage.base --add-tracefile coverage.run \
-            --output-file coverage.info --ignore-errors mismatch,gcov,unused,empty,negative
+          colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          colcon test --ctest-args -R "^test_"
+          # Sonar reads .gcov text reports rather than the lcov tracefile.
+          mkdir -p gcov
+          find build -name '*.gcda' -exec gcov -p -b {} + > /dev/null
+          mv ./*.gcov gcov/ 2>/dev/null || true
+          find gcov -name '*.gcov' | head
 
       - name: Run the analysis
         if: steps.config.outputs.enabled == 'true'
+        # PIPESTATUS is a bash builtin; container steps default to sh.
+        shell: bash
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: sonar-scanner -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
+        run: |
+          set +e
+          sonar-scanner \
+            -Dsonar.cfamily.compile-commands=build/nav_utils/compile_commands.json \
+            -Dsonar.cfamily.gcov.reportsPath=gcov 2>&1 | tee scanner.log
+          code=${PIPESTATUS[0]}
+          set -e
+          # SonarCloud refuses a CI analysis while its own Automatic Analysis is
+          # switched on. That is a project setting, not something this workflow
+          # can change, so report it as a warning instead of a red check and let
+          # every other scanner error keep failing the job.
+          if [ "$code" -ne 0 ] && grep -q "Automatic Analysis is enabled" scanner.log; then
+            {
+              echo "### SonarCloud analysis skipped"
+              echo
+              echo "The project still has **Automatic Analysis** enabled, which cannot"
+              echo "coexist with a CI analysis. Turn it off under"
+              echo "*Administration -> Analysis Method* to get C++ analysis and coverage:"
+              echo
+              echo "<https://sonarcloud.io/project/analysis_method?id=wansiedler_codecov_ros2_demo>"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::SonarCloud Automatic Analysis is enabled; CI analysis skipped."
+            exit 0
+          fi
+          exit "$code"
 
       - name: Explain the skip
         if: steps.config.outputs.enabled != 'true'
