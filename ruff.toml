@@ -1,0 +1,14 @@
+# Matches the style the rest of the repository is written in.
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "I", "UP", "C4", "SIM", "RUF"]
+
+[lint.per-file-ignores]
+# launch_testing discovers these by name and passes fixtures positionally.
+"src/nav_utils/test/*.py" = ["B011"]
+
+[lint.flake8-bandit]
+# The two urlopen calls are checked against a constant https base in the code.
+check-typed-exception = true

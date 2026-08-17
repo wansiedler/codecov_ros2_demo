@@ -11,9 +11,10 @@ version, and pip accepts any of the listed hashes for the file it picks.
 
 Usage: scripts/lock_requirements.py
 """
+
 import json
 import pathlib
-import subprocess
+import subprocess  # nosec B404 - fixed argv, no shell
 import sys
 import tempfile
 import urllib.request
@@ -33,9 +34,24 @@ def resolve(spec: str) -> list[tuple[str, str]]:
     # local user could pre-create or replace between the two calls.
     with tempfile.TemporaryDirectory() as workdir:
         report = pathlib.Path(workdir) / "pip-report.json"
-        subprocess.run(
-            ["python3", "-m", "pip", "install", "--dry-run", "--ignore-installed",
-             "--quiet", "--only-binary", ":all:", "--report", str(report), spec],
+        # sys.executable, not "python3": the resolution has to come from the
+        # interpreter running this script rather than from PATH. The argv is
+        # fixed and no shell is involved.
+        subprocess.run(  # nosec B603
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--dry-run",
+                "--ignore-installed",
+                "--quiet",
+                "--only-binary",
+                ":all:",
+                "--report",
+                str(report),
+                spec,
+            ],
             check=True,
         )
         data = json.loads(report.read_text())
@@ -44,7 +60,7 @@ def resolve(spec: str) -> list[tuple[str, str]]:
 
 def wheel_hashes(name: str, version: str) -> list[str]:
     url = f"https://pypi.org/pypi/{name}/{version}/json"
-    with urllib.request.urlopen(url, timeout=30) as response:
+    with urllib.request.urlopen(url, timeout=30) as response:  # nosec B310
         files = json.load(response)["urls"]
     return sorted({f["digests"]["sha256"] for f in files if f["packagetype"] == "bdist_wheel"})
 
@@ -63,8 +79,7 @@ def main() -> None:
             if not hashes:
                 sys.exit(f"no wheels published for {name} {version}")
             lines.append(
-                f"{name}=={version} \\\n"
-                + " \\\n".join(f"    --hash=sha256:{h}" for h in hashes)
+                f"{name}=={version} \\\n" + " \\\n".join(f"    --hash=sha256:{h}" for h in hashes)
             )
         path = OUTPUT_DIR / f"{tool}.txt"
         path.write_text("\n".join(lines) + "\n")
