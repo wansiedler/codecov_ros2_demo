@@ -20,6 +20,23 @@ Size encodes the number of statements, colour encodes coverage.
 * **Grid** — one block per file.
 * **Icicle** — same hierarchy as the sunburst, laid out top to bottom.
 
+## Coverage trend
+
+![Coverage trend](docs/coverage-trend.svg)
+
+Codecov's own trend chart reads an aggregated timeseries that is backfilled a
+while after a repository is activated, so it stays empty on a fresh project even
+though every commit already has a report. This SVG is rendered from the
+per-commit data the API returns immediately:
+
+```bash
+scripts/coverage_trend.py --limit 20      # writes docs/coverage-trend.svg
+```
+
+The dip to 43 % is the commit that added `battery_monitor.cpp` without tests,
+and the step from 97 % to 83 % is branch coverage being switched on - partially
+covered branches start counting against the total.
+
 ## What is in here
 
 ```text
