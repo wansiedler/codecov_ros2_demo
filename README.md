@@ -52,6 +52,43 @@ report without needing a robot.
 | `project` | Total coverage must not drop more than 1 % below the base commit. |
 | `patch` | At least 80 % of the lines *changed in the PR* must be covered. |
 
+## Quality gates
+
+Everything below runs on every pull request; the slow jobs also run on a schedule.
+
+| Layer | Tooling | Where |
+| --- | --- | --- |
+| Formatting | `clang-format` (ROS 2 profile in `.clang-format`), `ament_clang_format` | pre-commit + `Lint` workflow |
+| Style linting | `cpplint`, `ament_cpplint`, `cmake-lint`, `ament_lint_cmake`, `yamllint`, `actionlint`, `codespell` | pre-commit + `Lint` |
+| Static analysis | `cppcheck` / `ament_cppcheck`, `clang-tidy` (`.clang-tidy`, warnings are errors) | pre-commit + `Lint` |
+| Licence headers | `ament_copyright` | `Lint` |
+| Package manifests | `ament_xmllint` | `Lint` |
+| Secrets | `gitleaks` (working tree in pre-commit, full history in CI) | pre-commit + `Security` |
+| Code scanning | CodeQL `security-and-quality`, Trivy (`vuln,secret,misconfig`), OpenSSF Scorecard | `Security` |
+| Dependencies | Dependabot for GitHub Actions | `.github/dependabot.yml` |
+| Runtime analysis | ASan + UBSan, TSan, Valgrind memcheck | `Runtime analysis` |
+| Coverage | gcov → lcov → Codecov | `CI` |
+
+CodeQL, Trivy and Scorecard publish SARIF, so their findings land in the
+repository's **Security → Code scanning** tab instead of only in a log.
+
+### Local setup
+
+```bash
+pipx install pre-commit      # or: pip install --user pre-commit
+pre-commit install           # run the hooks on every commit
+pre-commit run --all-files   # run them over the whole tree once
+```
+
+Sanitizer and memcheck builds are plain CMake options, so the same checks run
+locally:
+
+```bash
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address,undefined
+colcon test
+valgrind --leak-check=full build/nav_utils/test_velocity_limiter
+```
+
 ## Setup (one time)
 
 1. Push this repository to GitHub.

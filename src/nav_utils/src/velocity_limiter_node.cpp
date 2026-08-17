@@ -1,3 +1,17 @@
+// Copyright 2026 Alexander Paul Wansiedler
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <chrono>
 #include <memory>
 
@@ -13,14 +27,15 @@ namespace nav_utils
 class VelocityLimiterNode : public rclcpp::Node
 {
 public:
-  VelocityLimiterNode()
-  : Node("velocity_limiter"),
-    limiter_(load_limits())
+  VelocityLimiterNode() : Node("velocity_limiter"), limiter_(load_limits())
   {
+    // cppcheck-suppress useInitializationList
+    // The publisher can only be created once the Node base class is fully
+    // constructed, so it cannot move into the initialiser list.
     publisher_ = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     subscription_ = create_subscription<geometry_msgs::msg::Twist>(
       "cmd_vel_raw", 10,
-      [this](const geometry_msgs::msg::Twist::SharedPtr msg) {on_command(*msg);});
+      [this](const geometry_msgs::msg::Twist::SharedPtr msg) { on_command(*msg); });
   }
 
 private:
