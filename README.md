@@ -168,7 +168,7 @@ Open a run under **Actions**, scroll to *Artifacts* at the bottom of the summary
 | --- | --- | --- |
 | `coverage-html` | `CI` | `genhtml` report: every source file with covered, partially covered and missed lines highlighted, including branch coverage |
 | `test-results` | `CI` | gtest JUnit XML - the same data Codecov test analytics ingests, useful for a local diff of which case failed |
-| `valgrind-memcheck` | `Runtime analysis` | One memcheck XML per test binary: leaks, invalid reads and uninitialised values with a full stack |
+| `valgrind-memcheck` | `Runtime analysis` | One memcheck XML per test binary: leaks, invalid reads and uninitialised values with a full stack. The job log prints a summary of the same data, because `--xml=yes` silences valgrind's own text output |
 | `callgrind-profiles` | `Runtime analysis`, nightly only | Callgrind output plus a rendered SVG call graph - where the time goes, per function |
 | `nav_utils.spdx.json` | `Security` | SPDX SBOM of the workspace, ready for a Dependency-Track style tool |
 

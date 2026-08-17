@@ -115,6 +115,34 @@ jobs:
               --xml=yes --xml-file="memcheck/$name.xml" "$test_binary" || status=$?
             echo "::endgroup::"
           done
+
+          # --xml=yes silences valgrind's text output, so without this the step
+          # only shows the gtest output and the findings stay in the artifact.
+          echo "::group::memcheck summary"
+          python3 - <<'SUMMARY'
+          import glob
+          import xml.etree.ElementTree as ET
+
+          for path in sorted(glob.glob("memcheck/*.xml")):
+              root = ET.parse(path).getroot()
+              errors = root.findall("error")
+              name = path.split("/")[-1].removesuffix(".xml")
+              if not errors:
+                  print(f"{name}: clean")
+                  continue
+              print(f"{name}: {len(errors)} error(s)")
+              for error in errors:
+                  kind = error.findtext("kind", "?")
+                  what = error.findtext("what") or error.findtext("xwhat/text") or ""
+                  frame = error.find("stack/frame")
+                  where = ""
+                  if frame is not None:
+                      where = (f"{frame.findtext('fn', '?')} "
+                               f"({frame.findtext('file', '?')}:{frame.findtext('line', '?')})")
+                  print(f"  {kind}: {what} {where}")
+          SUMMARY
+          echo "::endgroup::"
+
           exit $status
 
       - name: Upload the memcheck reports
