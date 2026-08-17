@@ -5,10 +5,6 @@ updates:
     directory: /
     schedule:
       interval: daily
-    # The default of five open pull requests is a queue, not a throttle: with
-    # eight actions to track it silently withholds the rest until the open ones
-    # are merged.
-    open-pull-requests-limit: 10
     groups:
       # One pull request for the routine bumps instead of one per action.
       github-actions:
