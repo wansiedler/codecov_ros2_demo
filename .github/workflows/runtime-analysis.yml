@@ -9,6 +9,9 @@ on:
     - cron: '31 3 * * *'   # nightly: valgrind and callgrind are too slow per push
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
