@@ -84,9 +84,30 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          set +e
           sonar-scanner \
             -Dsonar.cfamily.compile-commands=build/nav_utils/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=gcov
+            -Dsonar.cfamily.gcov.reportsPath=gcov 2>&1 | tee scanner.log
+          code=${PIPESTATUS[0]}
+          set -e
+          # SonarCloud refuses a CI analysis while its own Automatic Analysis is
+          # switched on. That is a project setting, not something this workflow
+          # can change, so report it as a warning instead of a red check and let
+          # every other scanner error keep failing the job.
+          if [ "$code" -ne 0 ] && grep -q "Automatic Analysis is enabled" scanner.log; then
+            {
+              echo "### SonarCloud analysis skipped"
+              echo
+              echo "The project still has **Automatic Analysis** enabled, which cannot"
+              echo "coexist with a CI analysis. Turn it off under"
+              echo "*Administration -> Analysis Method* to get C++ analysis and coverage:"
+              echo
+              echo "<https://sonarcloud.io/project/analysis_method?id=wansiedler_codecov_ros2_demo>"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::SonarCloud Automatic Analysis is enabled; CI analysis skipped."
+            exit 0
+          fi
+          exit "$code"
 
       - name: Explain the skip
         if: steps.config.outputs.enabled != 'true'
