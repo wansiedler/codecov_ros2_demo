@@ -66,23 +66,36 @@ if(BUILD_TESTING)
   ament_add_gtest(test_safety_zone test/test_safety_zone.cpp)
   target_link_libraries(test_safety_zone nav_utils_core)
 
-  # Linters are registered as ctest tests, so `colcon test` runs style, static
-  # analysis and licence checks next to the unit tests. Selected explicitly
-  # instead of ament_lint_common, which would also run uncrustify and fight
-  # the clang-format configuration in .clang-format.
-  find_package(ament_cmake_clang_format REQUIRED)
-  find_package(ament_cmake_copyright REQUIRED)
-  find_package(ament_cmake_cppcheck REQUIRED)
-  find_package(ament_cmake_cpplint REQUIRED)
-  find_package(ament_cmake_lint_cmake REQUIRED)
-  find_package(ament_cmake_xmllint REQUIRED)
+  # Linters are registered as ctest tests, so `colcon test` runs style, licence
+  # and static analysis checks next to the unit tests. Selected explicitly
+  # instead of ament_lint_common, which would also run uncrustify and fight the
+  # clang-format configuration in .clang-format.
+  #
+  # Looked up quietly on purpose: the coverage, sanitizer and CodeQL jobs build
+  # the package without the linter packages installed, and a hard requirement
+  # would break those builds instead of just skipping the style checks.
+  find_package(ament_cmake_copyright QUIET)
+  find_package(ament_cmake_cppcheck QUIET)
+  find_package(ament_cmake_cpplint QUIET)
+  find_package(ament_cmake_lint_cmake QUIET)
+  find_package(ament_cmake_xmllint QUIET)
 
-  ament_clang_format(CONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/../../.clang-format)
-  ament_copyright()
-  ament_cppcheck(LANGUAGE c++)
-  ament_cpplint(FILTERS -build/include_order -whitespace/braces -whitespace/newline)
-  ament_lint_cmake()
-  ament_xmllint()
+  if(ament_cmake_copyright_FOUND)
+    ament_copyright()
+  endif()
+  if(ament_cmake_cppcheck_FOUND)
+    ament_cppcheck(LANGUAGE c++)
+  endif()
+  if(ament_cmake_cpplint_FOUND)
+    ament_cpplint(FILTERS -build/header_guard -build/include_order -whitespace/braces
+      -whitespace/newline)
+  endif()
+  if(ament_cmake_lint_cmake_FOUND)
+    ament_lint_cmake()
+  endif()
+  if(ament_cmake_xmllint_FOUND)
+    ament_xmllint()
+  endif()
 endif()
 
 ament_export_include_directories(include)

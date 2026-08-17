@@ -6,13 +6,26 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '31 3 * * *'   # nightly: valgrind is too slow for every push
+    - cron: '31 3 * * *'   # nightly: valgrind and callgrind are too slow per push
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Etc/UTC
+
+concurrency:
+  group: runtime-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   sanitizers:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -30,6 +43,11 @@ jobs:
           apt-get install -y --no-install-recommends \
             build-essential cmake git python3-colcon-common-extensions
           rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
 
       - name: Build instrumented binaries
         shell: bash
@@ -56,6 +74,7 @@ jobs:
     name: valgrind memcheck
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -65,6 +84,11 @@ jobs:
           apt-get install -y --no-install-recommends \
             build-essential cmake git valgrind python3-colcon-common-extensions
           rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
 
       - name: Build
         shell: bash
@@ -76,12 +100,74 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
+          mkdir -p memcheck
           status=0
           for test_binary in build/nav_utils/test_*; do
             [ -x "$test_binary" ] || continue
-            echo "::group::valgrind $test_binary"
+            name=$(basename "$test_binary")
+            echo "::group::valgrind $name"
             valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite,indirect \
-              --track-origins=yes --error-exitcode=42 "$test_binary" || status=$?
+              --track-origins=yes --error-exitcode=42 \
+              --xml=yes --xml-file="memcheck/$name.xml" "$test_binary" || status=$?
             echo "::endgroup::"
           done
           exit $status
+
+      - name: Upload the memcheck reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-memcheck
+          path: memcheck
+          retention-days: 30
+
+  callgrind:
+    name: callgrind profile
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    timeout-minutes: 60
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install valgrind and the graph tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git valgrind graphviz python3-pip \
+            python3-colcon-common-extensions
+          pip3 install --break-system-packages gprof2dot
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+ \
+            --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Profile the unit tests and render call graphs
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          mkdir -p callgrind
+          for test_binary in build/nav_utils/test_*; do
+            [ -x "$test_binary" ] || continue
+            name=$(basename "$test_binary")
+            valgrind --tool=callgrind --callgrind-out-file="callgrind/$name.out" "$test_binary"
+            gprof2dot --format=callgrind --output="callgrind/$name.dot" "callgrind/$name.out"
+            dot -Tsvg "callgrind/$name.dot" -o "callgrind/$name.svg"
+          done
+
+      - name: Upload the profiles
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: callgrind-profiles
+          path: callgrind
+          retention-days: 30

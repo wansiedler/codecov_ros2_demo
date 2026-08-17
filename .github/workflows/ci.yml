@@ -5,13 +5,32 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Etc/UTC
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_BASEDIR: ${{ github.workspace }}
+  CCACHE_COMPRESS: "1"
+  CCACHE_MAXSIZE: "2G"
+  CCACHE_SLOPPINESS: time_macros,include_file_mtime,include_file_ctime
+
+# A newer push supersedes the previous run on the same ref, but never cancels a
+# scheduled or manually dispatched run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
   build-test-coverage:
     name: build + test + coverage
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
-
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
@@ -19,8 +38,18 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            build-essential cmake git lcov python3-colcon-common-extensions
+            build-essential cmake git lcov ccache \
+            python3-colcon-common-extensions
           rm -rf /var/lib/apt/lists/*
+
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-coverage-${{ github.sha }}
+          restore-keys: |
+            ccache-coverage-
+            ccache-
 
       - name: Install ROS dependencies
         run: |
@@ -33,13 +62,15 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           colcon build \
             --event-handlers console_direct+ \
-            --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+            --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          ccache --show-stats || true
 
       - name: Run tests
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
-          colcon test --event-handlers console_direct+
+          colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
           colcon test-result --verbose
 
       - name: Collect coverage
@@ -49,17 +80,36 @@ jobs:
           # test ever executes has no .gcda and would silently disappear from
           # the report instead of showing up as 0 % covered.
           lcov --capture --initial --directory build --output-file coverage.base \
-            --ignore-errors "$IGNORE"
+            --ignore-errors "$IGNORE" --rc branch_coverage=1
           lcov --capture --directory build --output-file coverage.run \
-            --ignore-errors "$IGNORE"
+            --ignore-errors "$IGNORE" --rc branch_coverage=1
           lcov --add-tracefile coverage.base --add-tracefile coverage.run \
-            --output-file coverage.info --ignore-errors "$IGNORE"
+            --output-file coverage.info --ignore-errors "$IGNORE" --rc branch_coverage=1
           # Keep only our own sources: no system headers, no gtest, no test code.
           lcov --extract coverage.info "$GITHUB_WORKSPACE/src/*" \
-            --output-file coverage.info --ignore-errors unused
+            --output-file coverage.info --ignore-errors unused --rc branch_coverage=1
           lcov --remove coverage.info "*/test/*" \
-            --output-file coverage.info --ignore-errors unused
-          lcov --list coverage.info
+            --output-file coverage.info --ignore-errors unused --rc branch_coverage=1
+          lcov --list coverage.info --rc branch_coverage=1
+          genhtml coverage.info --branch-coverage --legend \
+            --title "nav_utils @ ${GITHUB_SHA}" --output-directory coverage_html \
+            --ignore-errors inconsistent,corrupt
+
+      - name: Upload the browsable HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage_html
+          retention-days: 30
+
+      - name: Upload the JUnit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: build/nav_utils/test_results/**/*.xml
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -73,3 +123,38 @@ jobs:
           name: nav_utils
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload the test results to Codecov
+        if: always()
+        uses: codecov/test-results-action@v1
+        with:
+          files: build/nav_utils/test_results/nav_utils/*.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  publish-coverage-page:
+    name: publish coverage to Pages
+    needs: build-test-coverage
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage_html
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.run_id }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage_html
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

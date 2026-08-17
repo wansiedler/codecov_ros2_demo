@@ -10,7 +10,7 @@ A short script for demonstrating what Codecov adds to a ROS 2 C++ project.
 
 ## 1. The history on `main`
 
-```
+```text
 feat(nav_utils): add velocity limiter with unit tests   <- library + full tests
 ci: run tests under gcov and publish coverage to Codecov <- coverage pipeline
 feat(nav_utils): add battery monitor                     <- new code, NO tests
