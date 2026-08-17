@@ -24,12 +24,14 @@ next release.
 
 Talking points per commit:
 
-| Commit | What Codecov shows |
-| --- | --- |
-| `feat: velocity limiter` | Baseline, close to 100 % on the library. |
-| `ci: ...` | First upload; the sunburst / file tree becomes available. |
-| `feat: battery monitor` | Coverage drops, the new file is red in the file view. |
-| `test: cover battery monitor` | Coverage back at the baseline, file turns green. |
+| Commit | Coverage | What Codecov shows |
+| --- | --- | --- |
+| `feat: velocity limiter` | – | No report: the CI pipeline does not exist yet at this commit. |
+| `ci: ...` | **100 %** (19/19 lines) | First upload; sunburst and file tree become available. |
+| `feat: battery monitor` | **43.18 %** (19/44) | Coverage collapses, `battery_monitor.cpp` is fully red. |
+| `test: cover battery monitor` | **97.82 %** (45/46) | Back to green; the one miss is the unreachable `return "UNKNOWN";` guard. |
+
+These are the numbers the pipeline actually reported, not estimates.
 
 ## 2. The pull request demo (the part that convinces people)
 
@@ -66,8 +68,12 @@ Nothing in this setup is Codecov-specific magic:
 1. `-DCOVERAGE=ON` adds `--coverage` to the compile and link flags, so GCC
    writes `.gcno` (structure) and `.gcda` (counters) files next to the objects.
 2. `colcon test` executes the gtest binaries, which fills the counters.
-3. `lcov` merges the counters into a single `coverage.info` and strips system
-   headers, gtest internals and the tests themselves.
+3. `lcov` captures a baseline from the `.gcno` files (`--capture --initial`),
+   captures the executed counters, and merges both into a single
+   `coverage.info`, then strips system headers, gtest internals and the tests.
+   The baseline matters: a source file that no test ever touches has no `.gcda`
+   at all, and without the baseline it would silently vanish from the report
+   instead of showing up as 0 % covered.
 4. `codecov/codecov-action@v5` uploads that file and attaches it to the commit
    SHA, which is how Codecov can compare a pull request against its base.
 
