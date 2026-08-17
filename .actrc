@@ -19,3 +19,9 @@
 #   sudo sysctl -w vm.mmap_rnd_bits=28
 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 --container-architecture linux/amd64
+# act re-pulls every image on every run by default, which looks like a hang:
+# it prints nothing while several gigabytes come down. Use what is already in
+# the local docker cache; run `docker pull ros:jazzy-ros-base` to refresh.
+--pull=false
+# Remove the job containers when the run ends, successful or not.
+--rm
