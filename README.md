@@ -13,7 +13,9 @@ reports test coverage on every commit and pull request.
 ```
 src/nav_utils/
 ├── include/nav_utils/velocity_limiter.hpp   # clamping + acceleration ramp
+├── include/nav_utils/battery_monitor.hpp    # battery state classification
 ├── src/velocity_limiter.cpp
+├── src/battery_monitor.cpp
 ├── src/velocity_limiter_node.cpp            # rclcpp node (excluded from coverage)
 └── test/                                    # ament_cmake_gtest unit tests
 ```

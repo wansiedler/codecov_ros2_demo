@@ -47,6 +47,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_velocity_limiter test/test_velocity_limiter.cpp)
   target_link_libraries(test_velocity_limiter nav_utils_core)
+
+  ament_add_gtest(test_battery_monitor test/test_battery_monitor.cpp)
+  target_link_libraries(test_battery_monitor nav_utils_core)
 endif()
 
 ament_export_include_directories(include)

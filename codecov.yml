@@ -29,6 +29,7 @@ component_management:
       name: core logic
       paths:
         - src/nav_utils/src/velocity_limiter.cpp
+        - src/nav_utils/src/battery_monitor.cpp
     - component_id: ros_nodes
       name: ROS nodes
       paths:
