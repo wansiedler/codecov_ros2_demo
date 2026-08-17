@@ -36,17 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install build tooling
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
 
       - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
         with:

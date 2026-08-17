@@ -42,20 +42,11 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install build tooling
+      - name: Set up the workspace
         if: steps.config.outputs.enabled == 'true'
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git curl unzip lcov valgrind \
-            python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        if: steps.config.outputs.enabled == 'true'
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: curl unzip lcov valgrind
 
       # The C++ analyser reads the compile_commands.json that the build step
       # below requests via -DCMAKE_EXPORT_COMPILE_COMMANDS=ON, so only the
