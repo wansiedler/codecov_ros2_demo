@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test-coverage:
+    name: build + test + coverage
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build and coverage tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git lcov python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+
+      - name: Build with gcov instrumentation
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build \
+            --event-handlers console_direct+ \
+            --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+
+      - name: Run tests
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_direct+
+          colcon test-result --verbose
+
+      - name: Collect coverage
+        run: |
+          IGNORE=mismatch,gcov,unused,empty,negative
+          # Baseline from the .gcno files: without it, a source file that no
+          # test ever executes has no .gcda and would silently disappear from
+          # the report instead of showing up as 0 % covered.
+          lcov --capture --initial --directory build --output-file coverage.base \
+            --ignore-errors "$IGNORE"
+          lcov --capture --directory build --output-file coverage.run \
+            --ignore-errors "$IGNORE"
+          lcov --add-tracefile coverage.base --add-tracefile coverage.run \
+            --output-file coverage.info --ignore-errors "$IGNORE"
+          # Keep only our own sources: no system headers, no gtest, no test code.
+          lcov --extract coverage.info "$GITHUB_WORKSPACE/src/*" \
+            --output-file coverage.info --ignore-errors unused
+          lcov --remove coverage.info "*/test/*" \
+            --output-file coverage.info --ignore-errors unused
+          lcov --list coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.info
+          # Upload exactly the lcov report: without this the uploader rescans
+          # the workspace and picks up gcov data of system and gtest headers.
+          disable_search: true
+          plugins: noop
+          flags: unittests
+          name: nav_utils
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}

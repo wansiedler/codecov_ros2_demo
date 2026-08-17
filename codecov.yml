@@ -1,0 +1,41 @@
+# Codecov configuration — https://docs.codecov.com/docs/codecovyml-reference
+codecov:
+  require_ci_to_pass: true
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...90"
+
+  status:
+    project:
+      default:
+        # Overall coverage may not drop by more than 1 % against the base commit.
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        # New / changed lines in a PR must be at least 80 % covered.
+        target: 80%
+
+comment:
+  layout: "header, diff, flags, components, files, footer"
+  behavior: default
+  require_changes: false
+
+component_management:
+  individual_components:
+    - component_id: core_logic
+      name: core logic
+      paths:
+        - src/nav_utils/src/velocity_limiter.cpp
+    - component_id: ros_nodes
+      name: ROS nodes
+      paths:
+        - "**/*_node.cpp"
+
+ignore:
+  - "**/test/**"
+  - "**/*_node.cpp"   # thin rclcpp wiring, covered by integration tests instead
+  - "build/**"
+  - "install/**"
