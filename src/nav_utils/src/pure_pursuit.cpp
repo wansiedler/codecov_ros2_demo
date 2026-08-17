@@ -93,7 +93,12 @@ std::optional<double> PurePursuit::curvature(const Pose2D & pose) const
   if (squared == 0.0) {
     return 0.0;  // standing on the target, no arc to follow
   }
-  return 2.0 * local.y / squared;
+
+  const double arc = 2.0 * local.y / squared;
+  if (!std::isfinite(arc)) {
+    return std::nullopt;  // a non-finite pose or path point reached us
+  }
+  return arc;
 }
 
 std::optional<double> PurePursuit::angular_velocity(
@@ -107,7 +112,13 @@ std::optional<double> PurePursuit::angular_velocity(
     return 0.0;
   }
   const double bound = std::abs(config_.max_angular);
-  return std::clamp(*arc * linear_velocity, -bound, bound);
+  const double command = *arc * linear_velocity;
+  if (!std::isfinite(command) || !std::isfinite(bound)) {
+    // Better to report no command at all than to hand the motor controller a
+    // NaN, which compares false against every limit downstream.
+    return std::nullopt;
+  }
+  return std::clamp(command, -bound, bound);
 }
 
 }  // namespace nav_utils

@@ -58,6 +58,26 @@ install(TARGETS nav_utils_core
 install(TARGETS velocity_limiter_node DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)
 
+# The fuzz targets are built by ClusterFuzzLite inside the OSS-Fuzz image; this
+# option only exists so the same targets can be built locally with clang:
+#   cmake -DFUZZING=ON -DCMAKE_CXX_COMPILER=clang++ ..
+option(FUZZING "Build the libFuzzer targets" OFF)
+if(FUZZING AND NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  message(FATAL_ERROR "FUZZING needs clang: -fsanitize=fuzzer is a clang feature")
+endif()
+if(FUZZING)
+  # CONFIGURE_DEPENDS so a newly added target is picked up without re-running
+  # cmake by hand.
+  file(GLOB fuzz_sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/fuzz_*.cpp)
+  foreach(fuzz_source IN LISTS fuzz_sources)
+    get_filename_component(fuzz_name ${fuzz_source} NAME_WE)
+    add_executable(${fuzz_name} ${fuzz_source})
+    target_link_libraries(${fuzz_name} nav_utils_core)
+    target_compile_options(${fuzz_name} PRIVATE -fsanitize=fuzzer,address,undefined)
+    target_link_options(${fuzz_name} PRIVATE -fsanitize=fuzzer,address,undefined)
+  endforeach()
+endif()
+
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
