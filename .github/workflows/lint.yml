@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
@@ -45,7 +48,7 @@ jobs:
       # Pinned to the same version the pre-commit hook uses, so local and CI
       # formatting never disagree over a compiler release.
       - name: Install clang-format
-        run: 'pip install --only-binary=:all: "clang-format==22.1.8"'
+        run: 'pip install --only-binary=:all: --require-hashes -r requirements/clang-format.txt'
       - name: Check formatting
         run: |
           find src \( -name '*.cpp' -o -name '*.hpp' \) \

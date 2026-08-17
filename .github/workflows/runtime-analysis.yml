@@ -9,6 +9,9 @@ on:
     - cron: '31 3 * * *'   # nightly: valgrind and callgrind are too slow per push
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
@@ -141,7 +144,8 @@ jobs:
           apt-get install -y --no-install-recommends \
             build-essential cmake git valgrind graphviz python3-pip \
             python3-colcon-common-extensions
-          pip3 install --break-system-packages --only-binary=:all: "gprof2dot==2025.4.14"
+          pip3 install --break-system-packages --only-binary=:all: --require-hashes \
+            -r requirements/gprof2dot.txt
           rm -rf /var/lib/apt/lists/*
 
       - name: Install ROS dependencies

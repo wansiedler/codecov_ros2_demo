@@ -36,6 +36,7 @@ component_management:
         - src/nav_utils/src/velocity_limiter.cpp
         - src/nav_utils/src/battery_monitor.cpp
         - src/nav_utils/src/safety_zone.cpp
+        - src/nav_utils/src/pure_pursuit.cpp
     - component_id: ros_nodes
       name: ROS nodes
       paths:

@@ -4,7 +4,36 @@ A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://
 reports test coverage on every commit and pull request.
 
 [![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
+[![Lint](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml)
+[![Security](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml)
+[![Runtime analysis](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![Conventions](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml)
+[![Release](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml)
+[![SonarCloud](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml)
+
 [![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
+[![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Security rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Maintainability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Technical debt](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Code smells](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wansiedler/codecov_ros2_demo/badge)](https://scorecard.dev/viewer/?uri=github.com/wansiedler/codecov_ros2_demo)
+[![CodeQL](https://img.shields.io/badge/CodeQL-security--and--quality-2088FF?logo=github)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ACodeQL)
+[![Semgrep](https://img.shields.io/badge/Semgrep-p%2Fdefault%20%C2%B7%20p%2Fc%20%C2%B7%20p%2Fsecrets-1B2B34?logo=semgrep)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ASemgrep)
+[![Trivy](https://img.shields.io/badge/Trivy-vuln%20%C2%B7%20secret%20%C2%B7%20misconfig-1904DA?logo=aqua)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ATrivy)
+[![SBOM](https://img.shields.io/badge/SBOM-SPDX%20via%20Syft-0A7BBB)](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies)
+
+[![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)](https://docs.ros.org/en/jazzy/)
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/23)
+[![pre-commit](https://img.shields.io/badge/pre--commit-20%20hooks-FAB040?logo=pre-commit)](https://pre-commit.com/)
+[![Conventional Commits](https://img.shields.io/badge/commits-conventional-FE5196?logo=conventionalcommits)](https://www.conventionalcommits.org/)
+[![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/codecov_ros2_demo/blob/main/LICENSE)
 
 ## Coverage at a glance
 
@@ -20,14 +49,35 @@ Size encodes the number of statements, colour encodes coverage.
 * **Grid** — one block per file.
 * **Icicle** — same hierarchy as the sunburst, laid out top to bottom.
 
+## Coverage trend
+
+![Coverage trend](docs/coverage-trend.svg)
+
+Codecov's own trend chart reads an aggregated timeseries that is backfilled a
+while after a repository is activated, so it stays empty on a fresh project even
+though every commit already has a report. This SVG is rendered from the
+per-commit data the API returns immediately:
+
+```bash
+scripts/coverage_trend.py --limit 20      # writes docs/coverage-trend.svg
+```
+
+The dip to 43 % is the commit that added `battery_monitor.cpp` without tests,
+and the step from 97 % to 83 % is branch coverage being switched on - partially
+covered branches start counting against the total.
+
 ## What is in here
 
 ```text
 src/nav_utils/
 ├── include/nav_utils/velocity_limiter.hpp   # clamping + acceleration ramp
 ├── include/nav_utils/battery_monitor.hpp    # battery state classification
+├── include/nav_utils/safety_zone.hpp        # obstacle distance -> speed scale
+├── include/nav_utils/pure_pursuit.hpp       # path following geometry
 ├── src/velocity_limiter.cpp
 ├── src/battery_monitor.cpp
+├── src/safety_zone.cpp
+├── src/pure_pursuit.cpp
 ├── src/velocity_limiter_node.cpp            # rclcpp node (excluded from coverage)
 └── test/                                    # ament_cmake_gtest unit tests
 ```
@@ -35,6 +85,12 @@ src/nav_utils/
 The package is deliberately small: pure C++ classes with unit tests, plus one
 ROS node that wires them to topics. That is enough to produce a realistic coverage
 report without needing a robot.
+
+It builds as **C++23**, which is as far as GCC 13.3 in the `ros:jazzy` image
+goes. `std::numbers`, the ranges algorithms and `std::expected` are available
+there; `std::print`, `std::ranges::to` and `mdspan` are not - those need GCC 14.
+ROS 2 Jazzy itself targets C++17, so the standard is set for this package only
+and the rclcpp headers are consumed as they are.
 
 ## How coverage is produced
 
@@ -83,6 +139,42 @@ Two jobs need a secret before they do anything: `CODECOV_TOKEN` for the upload
 and `SONAR_TOKEN` for SonarCloud. The SonarCloud job skips itself with an
 explanatory summary when the token is absent, so the rest of the pipeline stays
 green.
+
+### Where to look at the results
+
+Every tool writes to its own place. This is what each of them answers.
+
+| Dashboard | Link | What it tells you |
+| --- | --- | --- |
+| Codecov overview | [app.codecov.io](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo) | Current coverage, sunburst and the file tree - which file is red |
+| Codecov commits | [/commits](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/commits) | Coverage per commit; the drop when untested code lands and the recovery |
+| Codecov pulls | [/pulls](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/pulls) | Per-pull-request comparison against the base, and the uncovered lines of the diff |
+| Codecov test analytics | [/tests/main](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/tests/main) | Flaky tests, failure history and test runtimes, fed by the JUnit XML |
+| SonarCloud | [sonarcloud.io](https://sonarcloud.io/dashboard?id=wansiedler_codecov_ros2_demo) | Bugs, code smells, security hotspots, duplication and the technical debt in hours |
+| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner and Scorecard findings, deduplicated per tool |
+| Dependency graph | [/network/dependencies](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
+| Actions | [/actions](https://github.com/wansiedler/codecov_ros2_demo/actions) | Every workflow run, its logs and its artifacts |
+| Coverage on Pages | [wansiedler.com/codecov_ros2_demo](http://wansiedler.com/codecov_ros2_demo/) | The browsable lcov report for `main`, line by line |
+
+Rule of thumb: **Codecov** answers *"is the thing I just changed tested?"*,
+**SonarCloud** answers *"how bad is the code and what does fixing it cost?"*,
+and the **Security tab** answers *"what is dangerous about it?"*.
+
+### What the CI artifacts contain
+
+Open a run under **Actions**, scroll to *Artifacts* at the bottom of the summary.
+
+| Artifact | Produced by | What is inside |
+| --- | --- | --- |
+| `coverage-html` | `CI` | `genhtml` report: every source file with covered, partially covered and missed lines highlighted, including branch coverage |
+| `test-results` | `CI` | gtest JUnit XML - the same data Codecov test analytics ingests, useful for a local diff of which case failed |
+| `valgrind-memcheck` | `Runtime analysis` | One memcheck XML per test binary: leaks, invalid reads and uninitialised values with a full stack |
+| `callgrind-profiles` | `Runtime analysis`, nightly only | Callgrind output plus a rendered SVG call graph - where the time goes, per function |
+| `nav_utils.spdx.json` | `Security` | SPDX SBOM of the workspace, ready for a Dependency-Track style tool |
+
+`coverage-html` is the one worth opening first: unzip it and open `index.html`.
+It shows exactly which branch of which `if` no test ever took, which is the part
+a percentage on its own never tells you.
 
 ### Local setup
 
