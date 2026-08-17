@@ -1,0 +1,82 @@
+---
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tools used by the local hooks
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cppcheck
+      - uses: pre-commit/action@v3.0.1
+
+  ament-linters:
+    name: ament linters
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install linters
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git clang-format cppcheck \
+            python3-colcon-common-extensions \
+            ros-jazzy-ament-cmake-clang-format \
+            ros-jazzy-ament-cmake-copyright \
+            ros-jazzy-ament-cmake-cppcheck \
+            ros-jazzy-ament-cmake-cpplint \
+            ros-jazzy-ament-cmake-lint-cmake \
+            ros-jazzy-ament-cmake-xmllint
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+
+
+      - name: Run style, licence and static analysis checks
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_direct+ \
+            --ctest-args -R "clang_format|copyright|cppcheck|cpplint|lint_cmake|xmllint"
+          colcon test-result --verbose
+
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-tidy
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git clang-tidy python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Build to generate compile_commands.json
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Analyse the package sources
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          run-clang-tidy -p build/nav_utils -quiet \
+            "$(pwd)/src/nav_utils/src/.*\.cpp"

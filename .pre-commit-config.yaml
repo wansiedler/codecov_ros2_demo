@@ -1,0 +1,88 @@
+# Local gate that mirrors the CI lint job: install with `pre-commit install`.
+# Run over the whole tree once with `pre-commit run --all-files`.
+---
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-added-large-files
+        args: [--maxkb=512]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-yaml
+      - id: check-xml
+      - id: destroyed-symlinks
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v22.1.8
+    hooks:
+      - id: clang-format
+        types_or: [c++, c]
+        args: [--style=file]
+
+  - repo: https://github.com/cpplint/cpplint
+    rev: 2.0.2
+    hooks:
+      - id: cpplint
+        args:
+          - --linelength=100
+          - --filter=-build/c++11,-build/header_guard,-build/include_order,-runtime/references,-whitespace/braces,-whitespace/indent,-whitespace/newline,-whitespace/parens
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: v0.6.13
+    hooks:
+      - id: cmake-lint
+        args: [--line-width=100, --disabled-codes, C0103, C0113]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.3
+    hooks:
+      - id: codespell
+        args: [--ignore-words-list=ba,inout,nd]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        args: [--strict]
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: cppcheck
+        name: cppcheck
+        description: Static analysis of the C++ sources.
+        entry: cppcheck
+        language: system
+        types: [c++]
+        exclude: '^src/nav_utils/test/'
+        args:
+          - --quiet
+          - --error-exitcode=1
+          - --enable=warning,style,performance,portability
+          - --inline-suppr
+          - --suppress=missingIncludeSystem
+          - --suppress=unusedFunction
+          # Members are used from other translation units, which this
+          # per-file invocation cannot see.
+          - --suppress=unusedStructMember
+          - --std=c++17
+          - --language=c++
+          - -Isrc/nav_utils/include

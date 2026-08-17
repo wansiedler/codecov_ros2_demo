@@ -1,0 +1,87 @@
+---
+name: Runtime analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '31 3 * * *'   # nightly: valgrind is too slow for every push
+
+jobs:
+  sanitizers:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: asan + ubsan
+            sanitize: address,undefined
+          - name: tsan
+            sanitize: thread
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Build instrumented binaries
+        shell: bash
+        env:
+          SANITIZE: ${{ matrix.sanitize }}
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+ \
+            --cmake-args -DCMAKE_BUILD_TYPE=Debug "-DSANITIZE=$SANITIZE"
+
+      - name: Run tests under the sanitizer
+        shell: bash
+        env:
+          ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          TSAN_OPTIONS: halt_on_error=1
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_direct+ --packages-select nav_utils \
+            --ctest-args -R "^test_"
+          colcon test-result --verbose
+
+  valgrind:
+    name: valgrind memcheck
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install valgrind
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git valgrind python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+ --cmake-args -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Run the unit tests under memcheck
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          status=0
+          for test_binary in build/nav_utils/test_*; do
+            [ -x "$test_binary" ] || continue
+            echo "::group::valgrind $test_binary"
+            valgrind --tool=memcheck --leak-check=full --show-leak-kinds=definite,indirect \
+              --track-origins=yes --error-exitcode=42 "$test_binary" || status=$?
+            echo "::endgroup::"
+          done
+          exit $status
