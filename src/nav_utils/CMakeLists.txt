@@ -13,6 +13,58 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wnon-virtual-dtor)
 endif()
 
+# The fleet runs on Haswell or newer, so AVX2 and FMA are fair game. Guarded by
+# the target architecture: -march is x86 only and would break an arm64 build.
+# Override with -DARCH_BASELINE=x86-64-v2 for older hardware, or with an empty
+# string to let the compiler pick its own default.
+set(ARCH_BASELINE "haswell" CACHE STRING "Value passed to -march on x86_64")
+if(ARCH_BASELINE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|AMD64)$" AND
+    (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+  add_compile_options(-march=${ARCH_BASELINE})
+  message(STATUS "nav_utils: architecture baseline -march=${ARCH_BASELINE}")
+endif()
+
+# Warnings become errors in CI, where nobody reads them otherwise.
+option(WARNINGS_AS_ERRORS "Turn compiler warnings into errors" OFF)
+if(WARNINGS_AS_ERRORS)
+  add_compile_options(-Werror)
+endif()
+
+# Hardening, following the OpenSSF Compiler Options Hardening Guide. Every flag
+# is probed first: the set differs between GCC and clang and between targets,
+# and an unsupported flag would otherwise fail the build.
+option(HARDENING "Enable the recommended hardening flags" ON)
+if(HARDENING AND (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+  include(CheckCXXCompilerFlag)
+
+  set(candidate_flags
+    -fstack-protector-strong
+    -fstack-clash-protection
+    -fcf-protection=full
+    -fno-delete-null-pointer-checks
+    -fno-strict-aliasing
+  )
+  foreach(flag IN LISTS candidate_flags)
+    string(MAKE_C_IDENTIFIER "HAVE${flag}" flag_var)
+    check_cxx_compiler_flag(${flag} ${flag_var})
+    if(${flag_var})
+      add_compile_options(${flag})
+    endif()
+  endforeach()
+
+  # Bounds-checked std::vector::operator[] and friends. This is the one that
+  # turns an out-of-range access into an abort instead of a wrong wheel command.
+  add_compile_definitions(_GLIBCXX_ASSERTIONS)
+
+  # _FORTIFY_SOURCE needs an optimising build; at -O0 it only emits a warning,
+  # which -Werror would then turn into a failed coverage build.
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(_FORTIFY_SOURCE=3)
+  endif()
+
+  add_link_options(-Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack)
+endif()
+
 # Export compile_commands.json so clang-tidy and IDEs can analyse the package.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -92,6 +144,13 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_pure_pursuit test/test_pure_pursuit.cpp)
   target_link_libraries(test_pure_pursuit nav_utils_core)
+
+  # Integration test: launches the node and drives it over real topics, which is
+  # the only way to cover the rclcpp wiring the unit tests cannot reach.
+  find_package(launch_testing_ament_cmake QUIET)
+  if(launch_testing_ament_cmake_FOUND)
+    add_launch_test(test/test_velocity_limiter_node.py TIMEOUT 90)
+  endif()
 
   # Linters are registered as ctest tests, so `colcon test` runs style, licence
   # and static analysis checks next to the unit tests. Selected explicitly

@@ -64,23 +64,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install linters
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git cppcheck \
-            python3-colcon-common-extensions \
-            ros-jazzy-ament-cmake-copyright \
-            ros-jazzy-ament-cmake-cppcheck \
-            ros-jazzy-ament-cmake-cpplint \
-            ros-jazzy-ament-cmake-lint-cmake \
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: >-
+            cppcheck
+            ros-jazzy-ament-cmake-copyright
+            ros-jazzy-ament-cmake-cppcheck
+            ros-jazzy-ament-cmake-cpplint
+            ros-jazzy-ament-cmake-lint-cmake
             ros-jazzy-ament-cmake-xmllint
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
 
       - name: Build
         shell: bash
@@ -106,17 +99,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install clang-tidy
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git clang-tidy python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: clang-tidy
 
       - name: Build to generate compile_commands.json
         shell: bash

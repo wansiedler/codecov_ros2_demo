@@ -39,17 +39,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install build tooling
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
 
       - name: Build instrumented binaries
         shell: bash
@@ -82,17 +73,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install valgrind
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git valgrind python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: valgrind
 
       - name: Build
         shell: bash
@@ -166,20 +150,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install valgrind and the graph tooling
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: valgrind graphviz python3-pip
+
+      - name: Install the graph tooling
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git valgrind graphviz python3-pip \
-            python3-colcon-common-extensions
           pip3 install --break-system-packages --only-binary=:all: --require-hashes \
             -r requirements/gprof2dot.txt
-          rm -rf /var/lib/apt/lists/*
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
 
       - name: Build
         shell: bash
