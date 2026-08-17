@@ -23,6 +23,7 @@ find_package(geometry_msgs REQUIRED)
 
 add_library(nav_utils_core
   src/velocity_limiter.cpp
+  src/battery_monitor.cpp
 )
 target_include_directories(nav_utils_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
