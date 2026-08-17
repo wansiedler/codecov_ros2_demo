@@ -44,6 +44,5 @@ component_management:
 
 ignore:
   - "**/test/**"
-  - "**/*_node.cpp"   # thin rclcpp wiring, covered by integration tests instead
   - "build/**"
   - "install/**"
