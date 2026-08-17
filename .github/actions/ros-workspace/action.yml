@@ -1,0 +1,53 @@
+---
+name: ROS workspace
+description: >
+  Installs the build toolchain and the package dependencies inside a ros image.
+  Every job that builds this workspace repeated the same three steps; this keeps
+  them in one place, which is what makes the setup portable to another repo.
+
+inputs:
+  packages:
+    description: Extra apt packages this job needs on top of the toolchain.
+    required: false
+    default: ''
+  compiler:
+    description: gcc or clang. Selects the toolchain and exports CC and CXX.
+    required: false
+    default: gcc
+
+runs:
+  using: composite
+  steps:
+    - name: Install the toolchain
+      shell: bash
+      env:
+        EXTRA_PACKAGES: ${{ inputs.packages }}
+        COMPILER: ${{ inputs.compiler }}
+      run: |
+        toolchain="build-essential cmake git python3-colcon-common-extensions"
+        if [ "$COMPILER" = "clang" ]; then
+          toolchain="$toolchain clang"
+        fi
+        apt-get update
+        # shellcheck disable=SC2086
+        apt-get install -y --no-install-recommends $toolchain $EXTRA_PACKAGES
+        rm -rf /var/lib/apt/lists/*
+
+    - name: Select the compiler
+      shell: bash
+      env:
+        COMPILER: ${{ inputs.compiler }}
+      run: |
+        if [ "$COMPILER" = "clang" ]; then
+          echo "CC=clang" >> "$GITHUB_ENV"
+          echo "CXX=clang++" >> "$GITHUB_ENV"
+        else
+          echo "CC=gcc" >> "$GITHUB_ENV"
+          echo "CXX=g++" >> "$GITHUB_ENV"
+        fi
+
+    - name: Install the ROS dependencies
+      shell: bash
+      run: |
+        rosdep update
+        rosdep install --from-paths src --ignore-src -y
