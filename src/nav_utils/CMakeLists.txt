@@ -24,6 +24,7 @@ find_package(geometry_msgs REQUIRED)
 add_library(nav_utils_core
   src/velocity_limiter.cpp
   src/battery_monitor.cpp
+  src/safety_zone.cpp
 )
 target_include_directories(nav_utils_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -50,6 +51,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_battery_monitor test/test_battery_monitor.cpp)
   target_link_libraries(test_battery_monitor nav_utils_core)
+
+  ament_add_gtest(test_safety_zone test/test_safety_zone.cpp)
+  target_link_libraries(test_safety_zone nav_utils_core)
 endif()
 
 ament_export_include_directories(include)
