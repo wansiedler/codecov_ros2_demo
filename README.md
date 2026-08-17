@@ -71,7 +71,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Profiling | Callgrind + `gprof2dot` SVG call graphs, nightly | `Runtime analysis` |
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
-| Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) | `SonarCloud` |
+| Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
 | Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
 
 CodeQL, Trivy, Semgrep, OSV-Scanner and Scorecard publish SARIF, so their
