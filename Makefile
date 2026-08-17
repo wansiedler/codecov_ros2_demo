@@ -32,7 +32,7 @@ build:  ## Build the workspace
 		--cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) $(CMAKE_ARGS)
 
 .PHONY: test
-test:  ## Build and run the tests
+test: build  ## Build and run the tests
 	$(ros) colcon test --event-handlers console_direct+ --packages-select $(PACKAGE)
 	$(ros) colcon test-result --verbose
 
@@ -63,7 +63,8 @@ lint:  ## Run every pre-commit hook over the whole tree
 
 .PHONY: hooks
 hooks:  ## Install the commit, message and push hooks
-	pre-commit install --install-hooks
+	pre-commit install --install-hooks \
+		--hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 
 .PHONY: tidy
 tidy:  ## Run clang-tidy against the compilation database
@@ -111,12 +112,6 @@ memcheck:  ## Run the unit tests under valgrind, write $(MEMCHECK_DIR)/*.xml
 .PHONY: memcheck-summary
 memcheck-summary:  ## Print the findings from $(MEMCHECK_DIR)/*.xml
 	@python3 scripts/memcheck_summary.py $(MEMCHECK_DIR)
-
-.PHONY: fuzz
-fuzz:  ## Build the libFuzzer targets (clang only) into build/fuzz
-	cmake -S src/$(PACKAGE) -B build/fuzz -DFUZZING=ON \
-		-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Debug
-	cmake --build build/fuzz
 
 .PHONY: trend
 trend:  ## Regenerate docs/coverage-trend.svg from the Codecov API

@@ -131,6 +131,34 @@ jobs:
           colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
           colcon test-result --verbose
 
+  future-standard:
+    name: C++26 canary
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    # Never blocks: it reports what a future toolchain would say, the way the
+    # Rolling distribution reports what the next ROS release will say. GCC 13 in
+    # this image has no -std=c++2c at all, so the canary brings its own gcc-14.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: gcc-14 g++-14
+
+      # The step environment wins over the CC and CXX the setup exported.
+      - name: Build as C++26
+        shell: bash
+        env:
+          CC: gcc-14
+          CXX: g++-14
+          CMAKE_ARGS: -DCMAKE_CXX_STANDARD=26
+        run: make build
+
   publish-coverage-page:
     name: publish coverage to Pages
     needs: build-test-coverage
