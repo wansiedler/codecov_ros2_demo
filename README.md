@@ -3,10 +3,9 @@
 A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://about.codecov.io/)
 reports test coverage on every commit and pull request.
 
-[![CI](https://github.com/OWNER/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/codecov_ros2_demo/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/OWNER/codecov_ros2_demo/branch/main/graph/badge.svg)](https://codecov.io/gh/OWNER/codecov_ros2_demo)
+[![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/branch/main/graph/badge.svg)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
 
-> Replace `OWNER` in the badge URLs with the GitHub account or organisation that hosts the repository.
 
 ## What is in here
 
