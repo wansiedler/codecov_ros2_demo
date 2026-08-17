@@ -117,6 +117,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload coverage to Codecov
+        if: ${{ !env.ACT }}
         uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac  # v5
         with:
           files: ./coverage.info
@@ -130,7 +131,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload the test results to Codecov
-        if: always()
+        if: always() && !env.ACT
         uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3  # v1
         with:
           files: build/nav_utils/test_results/nav_utils/*.xml

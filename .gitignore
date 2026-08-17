@@ -7,3 +7,7 @@ coverage_html/
 *.gcno
 *.gcov
 .DS_Store
+
+# act reads secrets from here by default - never commit it
+.secrets
+.env

@@ -1,11 +1,21 @@
-# Defaults for running the workflows locally with nektos/act:
-#   act -j build-test-coverage
+# Defaults for running the workflows locally with nektos/act.
+#
+# Run one job at a time - `act` with no arguments starts every workflow at once,
+# which means five ROS containers building in parallel:
+#   act -W .github/workflows/ci.yml -j build-test-coverage
+#   act -W .github/workflows/lint.yml
+#
+# Jobs that need the GitHub API (CodeQL, Scorecard, SBOM, release-please) skip
+# themselves under act, and the SARIF and Codecov uploads are guarded the same
+# way, so a local run finishes instead of retrying against an API that is not
+# there.
+#
+# Secrets, when a job needs one:
+#   act -s GITHUB_TOKEN="$(gh auth token)" -s CODECOV_TOKEN=... -s SONAR_TOKEN=...
+# or put them in .secrets (KEY=value per line), which .gitignore already covers.
 #
 # ThreadSanitizer refuses to start when the kernel randomises more than 28
 # address bits, which is the default on 6.x. Before running the tsan job:
 #   sudo sysctl -w vm.mmap_rnd_bits=28
-#
-# The artifact upload steps are skipped under act (see the env.ACT guards):
-# act cannot inject node into a job container, and ros:jazzy-ros-base has none.
 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 --container-architecture linux/amd64
