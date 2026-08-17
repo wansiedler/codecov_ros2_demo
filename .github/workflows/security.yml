@@ -1,0 +1,215 @@
+---
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 4 * * 1'   # weekly, so new advisories surface without a push
+  workflow_dispatch: {}
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Etc/UTC
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  codeql:
+    name: CodeQL (c-cpp)
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Install build tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+
+      - uses: github/codeql-action/init@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          languages: c-cpp
+          build-mode: manual
+          queries: security-and-quality
+
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+
+
+      - uses: github/codeql-action/analyze@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          category: /language:c-cpp
+
+  secret-scan:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0   # gitleaks scans the whole history, not just the tip
+
+      - name: Install gitleaks
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+
+      - name: Scan repository and history
+        run: gitleaks detect --source . --redact --verbose --exit-code 1
+
+  filesystem-scan:
+    name: trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Scan for vulnerabilities, secrets and misconfigurations
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          scan-type: fs
+          scanners: vuln,secret,misconfig
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Publish results to the Security tab
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  semgrep:
+    name: semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep:1.173.0
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Scan with the community rule sets
+        run: |
+          semgrep scan --config p/default --config p/c --config p/secrets \
+            --config p/github-actions --sarif --output semgrep.sarif
+
+      - name: Publish results to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  osv-scanner:
+    name: OSV scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Scan the sources for known vulnerabilities
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/osv-scanner \
+            https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
+          sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
+          # Exit 0 means nothing found and 1 means findings, both reported
+          # through SARIF; 128 means no supported manifest exists, which is the
+          # normal case for a pure C++ workspace. Anything else is a failure.
+          set +e
+          osv-scanner scan source --recursive --format sarif --output osv.sarif .
+          code=$?
+          set -e
+          # An empty runs array is rejected by the SARIF upload API, so fall
+          # back to a single run with no results.
+          [ -s osv.sarif ] || cat > osv.sarif <<'SARIF'
+          {
+            "version": "2.1.0",
+            "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+            "runs": [
+              {"tool": {"driver": {"name": "osv-scanner", "rules": []}}, "results": []}
+            ]
+          }
+          SARIF
+          case "$code" in
+            0 | 1 | 128) exit 0 ;;
+            *) exit "$code" ;;
+          esac
+
+      - name: Publish results to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          sarif_file: osv.sarif
+          category: osv-scanner
+
+  sbom:
+    name: SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write   # the dependency snapshot is written to the repository
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+
+      - name: Generate an SPDX SBOM and submit the dependency snapshot
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0
+        with:
+          path: .
+          format: spdx-json
+          artifact-name: nav_utils.spdx.json
+          dependency-snapshot: true
+
+  scorecard:
+    name: OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+
+      - uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46  # v2.4.0
+        with:
+          results_file: scorecard-results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
+        with:
+          sarif_file: scorecard-results.sarif
+          category: scorecard

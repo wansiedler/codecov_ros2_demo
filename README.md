@@ -22,7 +22,7 @@ Size encodes the number of statements, colour encodes coverage.
 
 ## What is in here
 
-```
+```text
 src/nav_utils/
 ├── include/nav_utils/velocity_limiter.hpp   # clamping + acceleration ramp
 ├── include/nav_utils/battery_monitor.hpp    # battery state classification
@@ -51,6 +51,55 @@ report without needing a robot.
 | --- | --- |
 | `project` | Total coverage must not drop more than 1 % below the base commit. |
 | `patch` | At least 80 % of the lines *changed in the PR* must be covered. |
+
+## Quality gates
+
+Everything below runs on every pull request; the slow jobs also run on a schedule.
+
+| Layer | Tooling | Where |
+| --- | --- | --- |
+| Formatting | `clang-format` pinned to one version for local and CI | pre-commit + `Lint` |
+| Style linting | `cpplint`, `ament_cpplint`, `cmake-lint`, `ament_lint_cmake`, `yamllint`, `actionlint`, `markdownlint`, `shellcheck`, `codespell` | pre-commit + `Lint` |
+| Static analysis | `cppcheck` / `ament_cppcheck`, `clang-tidy` (`.clang-tidy`, warnings are errors) | pre-commit + `Lint` |
+| Licence headers | `ament_copyright` | `Lint` |
+| Manifests & schemas | `ament_xmllint`, `check-jsonschema` for workflows and Dependabot | pre-commit + `Lint` |
+| Commit hygiene | `commitizen` (Conventional Commits, `commit-msg` hook + CI), semantic PR title | pre-commit + `Conventions` |
+| Secrets | `gitleaks` (working tree locally, full history in CI) | pre-commit + `Security` |
+| Code scanning | CodeQL `security-and-quality`, Trivy, Semgrep, OSV-Scanner, OpenSSF Scorecard | `Security` |
+| Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot | `Security` |
+| Runtime analysis | ASan + UBSan, TSan, Valgrind memcheck (XML artifacts) | `Runtime analysis` |
+| Profiling | Callgrind + `gprof2dot` SVG call graphs, nightly | `Runtime analysis` |
+| Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
+| Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
+| Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) | `SonarCloud` |
+| Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
+
+CodeQL, Trivy, Semgrep, OSV-Scanner and Scorecard publish SARIF, so their
+findings land in the repository's **Security → Code scanning** tab instead of
+only in a log. The browsable coverage report is published to GitHub Pages from
+`main`, and CI also uploads it as the `coverage-html` artifact on every run.
+
+Two jobs need a secret before they do anything: `CODECOV_TOKEN` for the upload
+and `SONAR_TOKEN` for SonarCloud. The SonarCloud job skips itself with an
+explanatory summary when the token is absent, so the rest of the pipeline stays
+green.
+
+### Local setup
+
+```bash
+pipx install pre-commit      # or: pip install --user pre-commit
+pre-commit install           # run the hooks on every commit
+pre-commit run --all-files   # run them over the whole tree once
+```
+
+Sanitizer and memcheck builds are plain CMake options, so the same checks run
+locally:
+
+```bash
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address,undefined
+colcon test
+valgrind --leak-check=full build/nav_utils/test_velocity_limiter
+```
 
 ## Setup (one time)
 

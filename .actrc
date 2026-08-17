@@ -1,0 +1,4 @@
+# Defaults for running the workflows locally with nektos/act:
+#   act -j build-test-coverage
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+--container-architecture linux/amd64

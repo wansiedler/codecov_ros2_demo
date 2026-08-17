@@ -1,0 +1,94 @@
+---
+name: SonarCloud
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+  TZ: Etc/UTC
+
+concurrency:
+  group: sonar-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  sonarcloud:
+    name: analysis
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0   # Sonar needs the history for new-code detection
+
+      - name: Check whether the analysis is configured
+        id: config
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install build tooling
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            build-essential cmake git curl unzip lcov \
+            python3-colcon-common-extensions
+          rm -rf /var/lib/apt/lists/*
+
+      - name: Install ROS dependencies
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y
+
+      - name: Install the Sonar scanner and build wrapper
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSLo /tmp/scanner.zip \
+            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-x64.zip
+          curl --proto '=https' --tlsv1.2 -sSLo /tmp/wrapper.zip \
+            https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+          unzip -q /tmp/scanner.zip -d /opt
+          unzip -q /tmp/wrapper.zip -d /opt
+          echo "/opt/sonar-scanner-6.2.1.4610-linux-x64/bin" >> "$GITHUB_PATH"
+          echo "/opt/build-wrapper-linux-x86" >> "$GITHUB_PATH"
+
+      - name: Build under the build wrapper and collect coverage
+        if: steps.config.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          build-wrapper-linux-x86-64 --out-dir bw-output \
+            colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+          colcon test --ctest-args -R "^test_" || true
+          lcov --capture --initial --directory build --output-file coverage.base \
+            --ignore-errors mismatch,gcov,unused,empty,negative
+          lcov --capture --directory build --output-file coverage.run \
+            --ignore-errors mismatch,gcov,unused,empty,negative
+          lcov --add-tracefile coverage.base --add-tracefile coverage.run \
+            --output-file coverage.info --ignore-errors mismatch,gcov,unused,empty,negative
+
+      - name: Run the analysis
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: sonar-scanner -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
+
+      - name: Explain the skip
+        if: steps.config.outputs.enabled != 'true'
+        run: |
+          echo "SONAR_TOKEN is not configured - create the project on sonarcloud.io" >> "$GITHUB_STEP_SUMMARY"
+          echo "and add the token as a repository secret to enable this job." >> "$GITHUB_STEP_SUMMARY"

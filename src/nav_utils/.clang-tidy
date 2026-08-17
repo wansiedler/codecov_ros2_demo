@@ -1,0 +1,45 @@
+# Static analysis rules. Checks that fight the ROS 2 style guide or that only
+# fire inside generated rosidl / rclcpp headers are disabled explicitly:
+#
+#   bugprone-reserved-identifier / cert-dcl37-c / cert-dcl51-cpp
+#     The ROS 2 include-guard convention (NAV_UTILS__FOO_HPP_) contains a
+#     double underscore, which these checks flag by design.
+#   bugprone-easily-swappable-parameters
+#     Fires on every (value, limit) pair of doubles; the parameter names carry
+#     the meaning here and renaming them would not help.
+#   misc-include-cleaner
+#     Wants every transitively used rclcpp header spelled out.
+---
+Checks: >
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-reserved-identifier,
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-type-vararg,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-magic-numbers
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'src/nav_utils/include/nav_utils/.*\.hpp$'
+FormatStyle: file
+
+CheckOptions:
+  - key: readability-function-cognitive-complexity.Threshold
+    value: '25'
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '0'
