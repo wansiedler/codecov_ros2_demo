@@ -4,7 +4,12 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
+    groups:
+      # One pull request for the routine bumps instead of one per action.
+      github-actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
     # Wait a week before proposing a freshly published version: a compromised
     # release is usually pulled well inside that window.
     cooldown:
