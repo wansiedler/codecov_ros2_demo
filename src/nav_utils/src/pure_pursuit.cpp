@@ -46,15 +46,9 @@ Point2D to_robot_frame(const Point2D & point, const Pose2D & pose)
 
 }  // namespace
 
-PurePursuit::PurePursuit(const PurePursuitConfig & config)
-: config_(config)
-{
-}
+PurePursuit::PurePursuit(const PurePursuitConfig & config) : config_(config) {}
 
-void PurePursuit::set_path(std::vector<Point2D> path)
-{
-  path_ = std::move(path);
-}
+void PurePursuit::set_path(std::vector<Point2D> path) { path_ = std::move(path); }
 
 bool PurePursuit::at_goal(const Pose2D & pose) const
 {
@@ -84,10 +78,13 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
 
   // From there, the first point at least one lookahead away; the goal itself
   // when the remaining path is shorter than that, so the robot drives it out.
-  for (std::size_t i = closest; i < path_.size(); ++i) {
-    if (distance(path_[i], pose) >= config_.lookahead) {
-      return path_[i];
-    }
+  const auto reached_lookahead = [this, &pose](const Point2D & point) {
+    return distance(point, pose) >= config_.lookahead;
+  };
+  const auto found = std::find_if(
+    path_.begin() + static_cast<std::ptrdiff_t>(closest), path_.end(), reached_lookahead);
+  if (found != path_.end()) {
+    return *found;
   }
   return path_.back();
 }

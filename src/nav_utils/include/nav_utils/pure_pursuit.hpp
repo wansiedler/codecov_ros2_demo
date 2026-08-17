@@ -39,9 +39,9 @@ struct Pose2D
 /// Tuning of the pursuit geometry.
 struct PurePursuitConfig
 {
-  double lookahead{1.0};        ///< m, distance of the carrot ahead of the robot
-  double max_angular{1.5};      ///< rad/s
-  double goal_tolerance{0.1};   ///< m, distance at which the path counts as done
+  double lookahead{1.0};       ///< m, distance of the carrot ahead of the robot
+  double max_angular{1.5};     ///< rad/s
+  double goal_tolerance{0.1};  ///< m, distance at which the path counts as done
 };
 
 /// Classic pure pursuit: pick a point on the path one lookahead distance away
@@ -54,10 +54,10 @@ public:
   /// Replaces the path to follow. An empty path disables the controller.
   void set_path(std::vector<Point2D> path);
 
-  [[nodiscard]] bool has_path() const {return !path_.empty();}
+  [[nodiscard]] bool has_path() const { return !path_.empty(); }
 
   /// Number of points in the current path.
-  [[nodiscard]] std::size_t path_size() const {return path_.size();}
+  [[nodiscard]] std::size_t path_size() const { return path_.size(); }
 
   /// True once the robot is within the goal tolerance of the last point.
   [[nodiscard]] bool at_goal(const Pose2D & pose) const;

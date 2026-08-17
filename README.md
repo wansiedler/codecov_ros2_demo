@@ -105,6 +105,42 @@ and `SONAR_TOKEN` for SonarCloud. The SonarCloud job skips itself with an
 explanatory summary when the token is absent, so the rest of the pipeline stays
 green.
 
+### Where to look at the results
+
+Every tool writes to its own place. This is what each of them answers.
+
+| Dashboard | Link | What it tells you |
+| --- | --- | --- |
+| Codecov overview | [app.codecov.io](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo) | Current coverage, sunburst and the file tree - which file is red |
+| Codecov commits | [/commits](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/commits) | Coverage per commit; the drop when untested code lands and the recovery |
+| Codecov pulls | [/pulls](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/pulls) | Per-pull-request comparison against the base, and the uncovered lines of the diff |
+| Codecov test analytics | [/tests/main](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/tests/main) | Flaky tests, failure history and test runtimes, fed by the JUnit XML |
+| SonarCloud | [sonarcloud.io](https://sonarcloud.io/dashboard?id=wansiedler_codecov_ros2_demo) | Bugs, code smells, security hotspots, duplication and the technical debt in hours |
+| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner and Scorecard findings, deduplicated per tool |
+| Dependency graph | [/network/dependencies](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
+| Actions | [/actions](https://github.com/wansiedler/codecov_ros2_demo/actions) | Every workflow run, its logs and its artifacts |
+| Coverage on Pages | [wansiedler.com/codecov_ros2_demo](http://wansiedler.com/codecov_ros2_demo/) | The browsable lcov report for `main`, line by line |
+
+Rule of thumb: **Codecov** answers *"is the thing I just changed tested?"*,
+**SonarCloud** answers *"how bad is the code and what does fixing it cost?"*,
+and the **Security tab** answers *"what is dangerous about it?"*.
+
+### What the CI artifacts contain
+
+Open a run under **Actions**, scroll to *Artifacts* at the bottom of the summary.
+
+| Artifact | Produced by | What is inside |
+| --- | --- | --- |
+| `coverage-html` | `CI` | `genhtml` report: every source file with covered, partially covered and missed lines highlighted, including branch coverage |
+| `test-results` | `CI` | gtest JUnit XML - the same data Codecov test analytics ingests, useful for a local diff of which case failed |
+| `valgrind-memcheck` | `Runtime analysis` | One memcheck XML per test binary: leaks, invalid reads and uninitialised values with a full stack |
+| `callgrind-profiles` | `Runtime analysis`, nightly only | Callgrind output plus a rendered SVG call graph - where the time goes, per function |
+| `nav_utils.spdx.json` | `Security` | SPDX SBOM of the workspace, ready for a Dependency-Track style tool |
+
+`coverage-html` is the one worth opening first: unzip it and open `index.html`.
+It shows exactly which branch of which `if` no test ever took, which is the part
+a percentage on its own never tells you.
+
 ### Local setup
 
 ```bash

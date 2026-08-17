@@ -6,6 +6,9 @@ on:
     types: [opened, edited, reopened, synchronize]
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 concurrency:
   group: conventions-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

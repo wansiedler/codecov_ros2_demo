@@ -6,6 +6,9 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false   # never interrupt a release in flight
