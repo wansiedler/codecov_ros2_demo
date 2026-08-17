@@ -4,8 +4,21 @@ A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://
 reports test coverage on every commit and pull request.
 
 [![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/branch/main/graph/badge.svg)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
+[![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
 
+## Coverage at a glance
+
+The graphs below are served live by Codecov and update with every upload.
+Size encodes the number of statements, colour encodes coverage.
+
+| Sunburst | Grid | Icicle |
+| --- | --- | --- |
+| [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/sunburst.svg?token=CT2tkB1DJ4" width="220" alt="Coverage sunburst">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) | [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/tree.svg?token=CT2tkB1DJ4" width="220" alt="Coverage grid">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) | [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/icicle.svg?token=CT2tkB1DJ4" width="220" alt="Coverage icicle">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) |
+
+* **Sunburst** — innermost ring is the whole project, outward rings are folders
+  and finally single files.
+* **Grid** — one block per file.
+* **Icicle** — same hierarchy as the sunburst, laid out top to bottom.
 
 ## What is in here
 
