@@ -83,7 +83,7 @@ repos:
   # Enforces Conventional Commits, which is what feeds the changelog and the
   # release-please version bumps.
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.10.1
+    rev: v4.17.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
