@@ -43,8 +43,12 @@ covered branches start counting against the total.
 src/nav_utils/
 ├── include/nav_utils/velocity_limiter.hpp   # clamping + acceleration ramp
 ├── include/nav_utils/battery_monitor.hpp    # battery state classification
+├── include/nav_utils/safety_zone.hpp        # obstacle distance -> speed scale
+├── include/nav_utils/pure_pursuit.hpp       # path following geometry
 ├── src/velocity_limiter.cpp
 ├── src/battery_monitor.cpp
+├── src/safety_zone.cpp
+├── src/pure_pursuit.cpp
 ├── src/velocity_limiter_node.cpp            # rclcpp node (excluded from coverage)
 └── test/                                    # ament_cmake_gtest unit tests
 ```
