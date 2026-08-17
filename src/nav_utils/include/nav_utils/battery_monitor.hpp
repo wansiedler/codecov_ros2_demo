@@ -23,7 +23,7 @@ namespace nav_utils
 
 /// Coarse battery health used by the navigation stack to decide whether the
 /// robot may accept new jobs, must return to the dock, or must stop.
-enum class BatteryState { Ok, Low, Critical };
+enum class BatteryState : std::uint8_t { Ok, Low, Critical };
 
 /// Thresholds expressed as state of charge in percent.
 struct BatteryThresholds
@@ -46,13 +46,13 @@ public:
   BatteryState update(double pack_voltage);
 
   /// State produced by the last update().
-  BatteryState state() const { return state_; }
+  [[nodiscard]] BatteryState state() const { return state_; }
 
   /// State of charge produced by the last update(), in percent.
-  double percent() const { return percent_; }
+  [[nodiscard]] double percent() const { return percent_; }
 
   /// True while the robot should head back to the charging station.
-  bool should_return_to_dock() const { return state_ != BatteryState::Ok; }
+  [[nodiscard]] bool should_return_to_dock() const { return state_ != BatteryState::Ok; }
 
   /// Human readable form of @p state, for logs and diagnostics.
   static std::string to_string(BatteryState state);

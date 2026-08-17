@@ -48,7 +48,7 @@ public:
   void reset();
 
   /// Last velocity returned by limit().
-  Twist2D last() const { return last_; }
+  [[nodiscard]] Twist2D last() const { return last_; }
 
 private:
   VelocityLimits limits_;

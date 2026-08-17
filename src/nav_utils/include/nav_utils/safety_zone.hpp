@@ -21,7 +21,7 @@ namespace nav_utils
 {
 
 /// Zone the closest obstacle currently falls into.
-enum class Zone {
+enum class Zone : std::uint8_t {
   Clear,    ///< nothing relevant in front of the robot
   Warning,  ///< slow down
   Danger,   ///< creep speed
