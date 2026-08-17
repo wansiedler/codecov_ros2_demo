@@ -107,6 +107,8 @@ repos:
           # Members are used from other translation units, which this
           # per-file invocation cannot see.
           - --suppress=unusedStructMember
-          - --std=c++17
+          # Must track CMAKE_CXX_STANDARD in src/nav_utils/CMakeLists.txt:
+          # parsing C++23 sources as C++17 hides real findings.
+          - --std=c++23
           - --language=c++
           - -Isrc/nav_utils/include
