@@ -44,7 +44,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            build-essential cmake git curl unzip lcov \
+            build-essential cmake git curl unzip lcov valgrind \
             python3-colcon-common-extensions
           rm -rf /var/lib/apt/lists/*
 
@@ -79,6 +79,24 @@ jobs:
           mv ./*.gcov gcov/ 2>/dev/null || true
           find gcov -name '*.gcov' | head
 
+      - name: Run memcheck for the Valgrind issue import
+        if: steps.config.outputs.enabled == 'true'
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          mkdir -p memcheck
+          for test_binary in build/nav_utils/test_*; do
+            [ -x "$test_binary" ] || continue
+            name=$(basename "$test_binary")
+            # No --error-exitcode here: a leak must show up as a Sonar issue,
+            # not kill the analysis before it is uploaded. The Runtime analysis
+            # workflow is the gate that fails the build on memory errors.
+            valgrind --tool=memcheck --leak-check=full \
+              --show-leak-kinds=definite,indirect --track-origins=yes \
+              --xml=yes --xml-file="memcheck/$name.xml" "$test_binary" || true
+          done
+          find memcheck -name '*.xml' | head
+
       - name: Run the analysis
         if: steps.config.outputs.enabled == 'true'
         # PIPESTATUS is a bash builtin; container steps default to sh.
@@ -87,9 +105,13 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set +e
+          # Valgrind Memcheck reports are imported as external issues, so the
+          # runtime findings land next to the static ones in the same project.
+          valgrind_reports=$(find memcheck -name '*.xml' | paste -sd, -)
           sonar-scanner \
             -Dsonar.cfamily.compile-commands=build/nav_utils/compile_commands.json \
-            -Dsonar.cfamily.gcov.reportsPath=gcov 2>&1 | tee scanner.log
+            -Dsonar.cfamily.gcov.reportsPath=gcov \
+            -Dsonar.cfamily.valgrind.reportsPaths="$valgrind_reports" 2>&1 | tee scanner.log
           code=${PIPESTATUS[0]}
           set -e
           # SonarCloud refuses a CI analysis while its own Automatic Analysis is
