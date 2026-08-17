@@ -10,7 +10,6 @@ on:
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
-  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 concurrency:
   group: sonar-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -29,8 +28,19 @@ jobs:
         with:
           fetch-depth: 0   # Sonar needs the history for new-code detection
 
+      - name: Check whether the analysis is configured
+        id: config
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install build tooling
-        if: env.SONAR_TOKEN != ''
+        if: steps.config.outputs.enabled == 'true'
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
@@ -39,13 +49,13 @@ jobs:
           rm -rf /var/lib/apt/lists/*
 
       - name: Install ROS dependencies
-        if: env.SONAR_TOKEN != ''
+        if: steps.config.outputs.enabled == 'true'
         run: |
           rosdep update
           rosdep install --from-paths src --ignore-src -y
 
       - name: Install the Sonar scanner and build wrapper
-        if: env.SONAR_TOKEN != ''
+        if: steps.config.outputs.enabled == 'true'
         run: |
           curl --proto '=https' --tlsv1.2 -sSLo /tmp/scanner.zip \
             https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-x64.zip
@@ -57,7 +67,7 @@ jobs:
           echo "/opt/build-wrapper-linux-x86" >> "$GITHUB_PATH"
 
       - name: Build under the build wrapper and collect coverage
-        if: env.SONAR_TOKEN != ''
+        if: steps.config.outputs.enabled == 'true'
         shell: bash
         run: |
           source /opt/ros/jazzy/setup.bash
@@ -72,11 +82,13 @@ jobs:
             --output-file coverage.info --ignore-errors mismatch,gcov,unused,empty,negative
 
       - name: Run the analysis
-        if: env.SONAR_TOKEN != ''
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: sonar-scanner -Dsonar.cfamily.compile-commands=bw-output/compile_commands.json
 
       - name: Explain the skip
-        if: env.SONAR_TOKEN == ''
+        if: steps.config.outputs.enabled != 'true'
         run: |
           echo "SONAR_TOKEN is not configured - create the project on sonarcloud.io" >> "$GITHUB_STEP_SUMMARY"
           echo "and add the token as a repository secret to enable this job." >> "$GITHUB_STEP_SUMMARY"
