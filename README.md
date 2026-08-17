@@ -87,7 +87,11 @@ ROS node that wires them to topics. That is enough to produce a realistic covera
 report without needing a robot.
 
 It builds as **C++23**, which is as far as GCC 13.3 in the `ros:jazzy` image
-goes. `std::numbers`, the ranges algorithms and `std::expected` are available
+goes, targeting `-march=haswell`: the fleet runs on Haswell or newer, so AVX2
+and FMA are available. Override with `-DARCH_BASELINE=x86-64-v2` for older
+hardware; the flag is skipped entirely off x86.
+
+`std::numbers`, the ranges algorithms and `std::expected` are available
 there; `std::print`, `std::ranges::to` and `mdspan` are not - those need GCC 14.
 ROS 2 Jazzy itself targets C++17, so the standard is set for this package only
 and the rclcpp headers are consumed as they are.
@@ -123,6 +127,9 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Secrets | `gitleaks` (working tree locally, full history in CI) | pre-commit + `Security` |
 | Code scanning | CodeQL `security-and-quality`, Trivy, Semgrep, OSV-Scanner, OpenSSF Scorecard | `Security` |
 | Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot | `Security` |
+| Toolchains | Every push builds with GCC **and** clang, warnings as errors | `CI` |
+| Hardening | `-fstack-protector-strong`, `-fstack-clash-protection`, `-fcf-protection`, `_GLIBCXX_ASSERTIONS`, `_FORTIFY_SOURCE=3`, RELRO and a non-executable stack, each probed before use | build |
+| Integration | `launch_testing` drives the node over real topics | `CI` |
 | Runtime analysis | ASan + UBSan, TSan, Valgrind memcheck (XML artifacts) | `Runtime analysis` |
 | Profiling | Callgrind + `gprof2dot` SVG call graphs, nightly | `Runtime analysis` |
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |

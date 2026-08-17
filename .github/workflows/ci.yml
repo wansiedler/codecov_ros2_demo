@@ -36,13 +36,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Install build and coverage tooling
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            build-essential cmake git lcov ccache \
-            python3-colcon-common-extensions
-          rm -rf /var/lib/apt/lists/*
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          packages: lcov ccache
 
       - name: Cache compiled objects
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
@@ -52,11 +49,6 @@ jobs:
           restore-keys: |
             ccache-coverage-
             ccache-
-
-      - name: Install ROS dependencies
-        run: |
-          rosdep update
-          rosdep install --from-paths src --ignore-src -y
 
       - name: Build with gcov instrumentation
         shell: bash
@@ -136,6 +128,39 @@ jobs:
         with:
           files: build/nav_utils/test_results/nav_utils/*.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  compilers:
+    name: build with ${{ matrix.compiler }}
+    runs-on: ubuntu-latest
+    container: ros:jazzy-ros-base
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Set up the workspace
+        uses: ./.github/actions/ros-workspace
+        with:
+          compiler: ${{ matrix.compiler }}
+
+      - name: Build with warnings as errors
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build --event-handlers console_direct+ \
+            --cmake-args -DCMAKE_BUILD_TYPE=Release -DWARNINGS_AS_ERRORS=ON
+
+      - name: Run tests
+        shell: bash
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
+          colcon test-result --verbose
 
   publish-coverage-page:
     name: publish coverage to Pages
