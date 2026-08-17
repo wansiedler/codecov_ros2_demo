@@ -2,8 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 project(nav_utils)
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
+  # C++23 as far as GCC 13 in the Jazzy image supports it: std::numbers and the
+  # ranges algorithms are there, std::print and ranges::to are not (GCC 14).
+  set(CMAKE_CXX_STANDARD 23)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")

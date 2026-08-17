@@ -16,8 +16,8 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstddef>
 #include <optional>
+#include <ranges>
 #include <utility>
 #include <vector>
 
@@ -66,25 +66,16 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
 
   // Start from the point closest to the robot, otherwise a pose near the end of
   // the path would match an early point that lies behind it and steer backwards.
-  std::size_t closest = 0;
-  double closest_distance = distance(path_.front(), pose);
-  for (std::size_t i = 1; i < path_.size(); ++i) {
-    const double candidate = distance(path_[i], pose);
-    if (candidate < closest_distance) {
-      closest_distance = candidate;
-      closest = i;
-    }
-  }
+  const auto closest = std::ranges::min_element(
+    path_, {}, [&pose](const Point2D & point) { return distance(point, pose); });
 
   // From there, the first point at least one lookahead away; the goal itself
   // when the remaining path is shorter than that, so the robot drives it out.
-  const auto reached_lookahead = [this, &pose](const Point2D & point) {
+  const auto ahead = std::ranges::subrange(closest, path_.end());
+  const auto found = std::ranges::find_if(ahead, [this, &pose](const Point2D & point) {
     return distance(point, pose) >= config_.lookahead;
-  };
-  if (
-    const auto found = std::find_if(
-      path_.begin() + static_cast<std::ptrdiff_t>(closest), path_.end(), reached_lookahead);
-    found != path_.end()) {
+  });
+  if (found != ahead.end()) {
     return *found;
   }
   return path_.back();

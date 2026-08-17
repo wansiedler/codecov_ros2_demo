@@ -28,7 +28,7 @@ reports test coverage on every commit and pull request.
 [![SBOM](https://img.shields.io/badge/SBOM-SPDX%20via%20Syft-0A7BBB)](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies)
 
 [![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)](https://docs.ros.org/en/jazzy/)
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
+[![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/23)
 [![pre-commit](https://img.shields.io/badge/pre--commit-20%20hooks-FAB040?logo=pre-commit)](https://pre-commit.com/)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-FE5196?logo=conventionalcommits)](https://www.conventionalcommits.org/)
 [![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
@@ -85,6 +85,12 @@ src/nav_utils/
 The package is deliberately small: pure C++ classes with unit tests, plus one
 ROS node that wires them to topics. That is enough to produce a realistic coverage
 report without needing a robot.
+
+It builds as **C++23**, which is as far as GCC 13.3 in the `ros:jazzy` image
+goes. `std::numbers`, the ranges algorithms and `std::expected` are available
+there; `std::print`, `std::ranges::to` and `mdspan` are not - those need GCC 14.
+ROS 2 Jazzy itself targets C++17, so the standard is set for this package only
+and the rclcpp headers are consumed as they are.
 
 ## How coverage is produced
 
