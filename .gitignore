@@ -2,7 +2,12 @@ build/
 install/
 log/
 coverage.info
+# The baseline and the run are merged into coverage.info and are megabytes each.
+coverage.base
+coverage.run
 coverage_html/
+memcheck/
+__pycache__/
 *.gcda
 *.gcno
 *.gcov
