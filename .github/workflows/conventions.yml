@@ -6,6 +6,9 @@ on:
     types: [opened, edited, reopened, synchronize]
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 concurrency:
   group: conventions-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -27,7 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install commitizen
-        run: 'pip install --only-binary=:all: "commitizen==4.1.0"'
+        run: 'pip install --only-binary=:all: --require-hashes -r requirements/commitizen.txt'
 
       - name: Check every commit against Conventional Commits
         env:

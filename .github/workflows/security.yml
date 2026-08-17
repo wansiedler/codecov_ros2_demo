@@ -9,6 +9,9 @@ on:
     - cron: '17 4 * * 1'   # weekly, so new advisories surface without a push
   workflow_dispatch: {}
 
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
