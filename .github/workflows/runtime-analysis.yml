@@ -115,7 +115,9 @@ jobs:
           exit $status
 
       - name: Upload the memcheck reports
-        if: always()
+        # act cannot inject node into a job container, so the Node based
+        # artifact actions only run on GitHub. env.ACT is set by act.
+        if: always() && !env.ACT
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: valgrind-memcheck
@@ -168,7 +170,9 @@ jobs:
           done
 
       - name: Upload the profiles
-        if: always()
+        # act cannot inject node into a job container, so the Node based
+        # artifact actions only run on GitHub. env.ACT is set by act.
+        if: always() && !env.ACT
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: callgrind-profiles
