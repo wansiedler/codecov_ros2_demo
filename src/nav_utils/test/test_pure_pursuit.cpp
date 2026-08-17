@@ -212,6 +212,19 @@ TEST(PurePursuit, ReportsNoCommandForNonFiniteGeometry)
   EXPECT_FALSE(controller.angular_velocity(Pose2D{}, nan).has_value());
 }
 
+TEST(PurePursuit, ReportsNoCommandWhenTheLimitItselfIsNotFinite)
+{
+  PurePursuitConfig config = default_config();
+  config.max_angular = std::numeric_limits<double>::infinity();
+  PurePursuit controller{config};
+  controller.set_path({{0.0, 0.5}});  // a perfectly ordinary arc
+
+  // The geometry is fine here; the configuration is not. Clamping against an
+  // infinite bound would pass the raw curvature through to the wheels, so a
+  // limit that is not a number has to be treated as no usable limit at all.
+  EXPECT_FALSE(controller.angular_velocity(Pose2D{}, 1.0).has_value());
+}
+
 TEST(PurePursuit, SurvivesNonFinitePointsInThePath)
 {
   PurePursuit controller{default_config()};
