@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <numbers>
 #include <vector>
 
 #include "nav_utils/pure_pursuit.hpp"
@@ -28,9 +29,9 @@ namespace
 
 constexpr double kTolerance = 1e-9;
 
-// M_PI and friends are POSIX extensions that glibc hides under strict
-// -std=c++17, so spell the constants out instead of relying on <cmath>.
-constexpr double kPi = 3.14159265358979323846;
+// std::numbers::pi instead of the POSIX M_PI macros, which glibc hides
+// under a strict -std= setting.
+constexpr double kPi = std::numbers::pi;
 constexpr double kHalfPi = kPi / 2.0;
 
 PurePursuitConfig default_config()
