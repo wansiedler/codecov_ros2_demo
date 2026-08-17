@@ -4,7 +4,16 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: daily
+    # The default of five open pull requests is a queue, not a throttle: with
+    # eight actions to track it silently withholds the rest until the open ones
+    # are merged.
+    open-pull-requests-limit: 10
+    groups:
+      # One pull request for the routine bumps instead of one per action.
+      github-actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
     # Wait a week before proposing a freshly published version: a compromised
     # release is usually pulled well inside that window.
     cooldown:
