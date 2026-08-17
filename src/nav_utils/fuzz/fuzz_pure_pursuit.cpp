@@ -83,13 +83,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
   static_cast<void>(controller.lookahead_point(pose));
   static_cast<void>(controller.curvature(pose));
 
-  const auto command = controller.angular_velocity(pose, reader.next_double());
-
   // The contract, checked unconditionally: whatever the input, a command that
   // exists is finite, and it stays inside the bound whenever the bound itself
   // is finite. A NaN steering rate compares false against every limit
   // downstream, so it must never leave the controller.
-  if (command.has_value()) {
+  if (
+    const auto command = controller.angular_velocity(pose, reader.next_double());
+    command.has_value()) {
     if (!std::isfinite(*command)) {
       __builtin_trap();
     }

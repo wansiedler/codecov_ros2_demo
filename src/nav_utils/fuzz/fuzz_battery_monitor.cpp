@@ -25,8 +25,7 @@
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
 {
-  constexpr size_t kNeeded = sizeof(double) * 3 + sizeof(int32_t);
-  if (size < kNeeded) {
+  if (constexpr size_t kNeeded = (sizeof(double) * 3) + sizeof(int32_t); size < kNeeded) {
     return 0;
   }
 
@@ -53,8 +52,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t * data, size_t size)
   // Unconditional: a NaN percentage would slip through a plain range check,
   // because every comparison against NaN is false. Whatever voltage arrives,
   // the reported state of charge has to be a real number within 0..100.
-  const double percent = monitor.percent_from_voltage(voltage);
-  if (!std::isfinite(percent) || percent < 0.0 || percent > 100.0) {
+  if (
+    const double percent = monitor.percent_from_voltage(voltage);
+    !std::isfinite(percent) || percent < 0.0 || percent > 100.0) {
     __builtin_trap();
   }
 
