@@ -30,7 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install commitizen
-        run: pip install --require-hashes -r requirements/commitizen.txt
+        run: 'pip install --only-binary=:all: --require-hashes -r requirements/commitizen.txt'
 
       - name: Check every commit against Conventional Commits
         env:
