@@ -4,7 +4,36 @@ A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://
 reports test coverage on every commit and pull request.
 
 [![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
+[![Lint](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml)
+[![Security](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml)
+[![Runtime analysis](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![Conventions](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml)
+[![Release](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml)
+[![SonarCloud](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml)
+
 [![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
+[![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Security rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Maintainability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Technical debt](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Code smells](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wansiedler/codecov_ros2_demo/badge)](https://scorecard.dev/viewer/?uri=github.com/wansiedler/codecov_ros2_demo)
+[![CodeQL](https://img.shields.io/badge/CodeQL-security--and--quality-2088FF?logo=github)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ACodeQL)
+[![Semgrep](https://img.shields.io/badge/Semgrep-p%2Fdefault%20%C2%B7%20p%2Fc%20%C2%B7%20p%2Fsecrets-1B2B34?logo=semgrep)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ASemgrep)
+[![Trivy](https://img.shields.io/badge/Trivy-vuln%20%C2%B7%20secret%20%C2%B7%20misconfig-1904DA?logo=aqua)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ATrivy)
+[![SBOM](https://img.shields.io/badge/SBOM-SPDX%20via%20Syft-0A7BBB)](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies)
+
+[![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)](https://docs.ros.org/en/jazzy/)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
+[![pre-commit](https://img.shields.io/badge/pre--commit-20%20hooks-FAB040?logo=pre-commit)](https://pre-commit.com/)
+[![Conventional Commits](https://img.shields.io/badge/commits-conventional-FE5196?logo=conventionalcommits)](https://www.conventionalcommits.org/)
+[![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/codecov_ros2_demo/blob/main/LICENSE)
 
 ## Coverage at a glance
 
