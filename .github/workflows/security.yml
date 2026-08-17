@@ -9,9 +9,6 @@ on:
     - cron: '17 4 * * 1'   # weekly, so new advisories surface without a push
   workflow_dispatch: {}
 
-permissions:
-  contents: read
-
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
@@ -30,7 +27,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Install build tooling
         run: |
@@ -44,7 +41,7 @@ jobs:
           rosdep update
           rosdep install --from-paths src --ignore-src -y
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           languages: c-cpp
           build-mode: manual
@@ -56,7 +53,7 @@ jobs:
           source /opt/ros/jazzy/setup.bash
           colcon build --event-handlers console_direct+
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           category: /language:c-cpp
 
@@ -64,14 +61,16 @@ jobs:
     name: gitleaks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0   # gitleaks scans the whole history, not just the tip
 
       - name: Install gitleaks
         run: |
-          curl -sSfL -o /tmp/gitleaks.tar.gz \
+          curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/gitleaks.tar.gz \
             https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           sudo install /tmp/gitleaks /usr/local/bin/gitleaks
@@ -87,10 +86,10 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Scan for vulnerabilities, secrets and misconfigurations
-        uses: aquasecurity/trivy-action@v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           scan-type: fs
           scanners: vuln,secret,misconfig
@@ -99,7 +98,7 @@ jobs:
           severity: CRITICAL,HIGH,MEDIUM
 
       - name: Publish results to the Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           sarif_file: trivy-results.sarif
           category: trivy
@@ -112,9 +111,9 @@ jobs:
       contents: read
       security-events: write
     container:
-      image: semgrep/semgrep
+      image: semgrep/semgrep:1.173.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Scan with the community rule sets
         run: |
@@ -123,7 +122,7 @@ jobs:
 
       - name: Publish results to the Security tab
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           sarif_file: semgrep.sarif
           category: semgrep
@@ -136,11 +135,11 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Scan the sources for known vulnerabilities
         run: |
-          curl -sSfL -o /tmp/osv-scanner \
+          curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/osv-scanner \
             https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
           sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
           # Exit 0 means nothing found and 1 means findings, both reported
@@ -168,7 +167,7 @@ jobs:
 
       - name: Publish results to the Security tab
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           sarif_file: osv.sarif
           category: osv-scanner
@@ -180,10 +179,10 @@ jobs:
     permissions:
       contents: write   # the dependency snapshot is written to the repository
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
 
       - name: Generate an SPDX SBOM and submit the dependency snapshot
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610  # v0
         with:
           path: .
           format: spdx-json
@@ -200,17 +199,17 @@ jobs:
       security-events: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           persist-credentials: false
 
-      - uses: ossf/scorecard-action@v2.4.0
+      - uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46  # v2.4.0
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
           publish_results: true
 
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324  # v3
         with:
           sarif_file: scorecard-results.sarif
           category: scorecard

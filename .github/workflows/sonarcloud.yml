@@ -7,9 +7,6 @@ on:
   pull_request:
   workflow_dispatch: {}
 
-permissions:
-  contents: read
-
 env:
   DEBIAN_FRONTEND: noninteractive
   TZ: Etc/UTC
@@ -25,8 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     container: ros:jazzy-ros-base
     timeout-minutes: 45
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0   # Sonar needs the history for new-code detection
 
@@ -48,9 +47,9 @@ jobs:
       - name: Install the Sonar scanner and build wrapper
         if: env.SONAR_TOKEN != ''
         run: |
-          curl -sSLo /tmp/scanner.zip \
+          curl --proto '=https' --tlsv1.2 -sSLo /tmp/scanner.zip \
             https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-6.2.1.4610-linux-x64.zip
-          curl -sSLo /tmp/wrapper.zip \
+          curl --proto '=https' --tlsv1.2 -sSLo /tmp/wrapper.zip \
             https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -q /tmp/scanner.zip -d /opt
           unzip -q /tmp/wrapper.zip -d /opt
