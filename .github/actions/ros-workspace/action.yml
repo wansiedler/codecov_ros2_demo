@@ -46,8 +46,31 @@ runs:
           echo "CXX=g++" >> "$GITHUB_ENV"
         fi
 
+    # rosdep update pulls the distribution index from raw.githubusercontent.com
+    # on every job. With several pull requests in flight that is dozens of hits a
+    # minute from one runner pool, and GitHub answers 429 - which failed jobs
+    # that had nothing wrong with them. The cache removes most of the traffic and
+    # the retry rides out the rest.
+    - name: Cache the rosdep index
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+      with:
+        path: ~/.ros/rosdep
+        key: rosdep-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: rosdep-${{ runner.os }}-
+
     - name: Install the ROS dependencies
       shell: bash
       run: |
-        rosdep update
+        for attempt in 1 2 3 4 5; do
+          if rosdep update; then
+            break
+          fi
+          if [ "$attempt" = 5 ]; then
+            echo "rosdep update failed five times" >&2
+            exit 1
+          fi
+          delay=$((attempt * 15))
+          echo "rosdep update failed, retrying in ${delay}s" >&2
+          sleep "$delay"
+        done
         rosdep install --from-paths src --ignore-src -y
