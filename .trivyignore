@@ -1,0 +1,8 @@
+# The ClusterFuzzLite image derives from gcr.io/oss-fuzz-base/base-builder, which
+# builds as root by design - the OSS-Fuzz tooling writes to $SRC and $OUT as root
+# and ClusterFuzzLite drives it that way. Adding a USER line breaks the build,
+# and the image never runs as a service.
+DS-0002
+# HEALTHCHECK belongs to long-running service images. This one exists to compile
+# fuzz targets and exits.
+DS-0026

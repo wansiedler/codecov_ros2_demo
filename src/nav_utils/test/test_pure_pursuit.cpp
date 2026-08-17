@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <numbers>
 #include <vector>
 
@@ -191,6 +192,23 @@ TEST(PurePursuit, HandlesStandingExactlyOnTheTarget)
   const Pose2D on_target{1.0, 1.0, 0.0};
   EXPECT_NEAR(*controller.curvature(on_target), 0.0, kTolerance);
   EXPECT_NEAR(*controller.angular_velocity(on_target, 1.0), 0.0, kTolerance);
+}
+
+TEST(PurePursuit, ReportsNoCommandForNonFiniteGeometry)
+{
+  PurePursuit controller{default_config()};
+  const double nan = std::numeric_limits<double>::quiet_NaN();
+
+  // A localisation glitch or a planner bug can put NaN in the pose or the path.
+  // A NaN steering rate compares false against every limit downstream, so the
+  // controller has to report no command instead.
+  controller.set_path({{nan, 0.0}});
+  EXPECT_FALSE(controller.curvature(Pose2D{}).has_value());
+  EXPECT_FALSE(controller.angular_velocity(Pose2D{}, 1.0).has_value());
+
+  controller.set_path({{1.0, 1.0}});
+  EXPECT_FALSE(controller.angular_velocity(Pose2D{nan, 0.0, 0.0}, 1.0).has_value());
+  EXPECT_FALSE(controller.angular_velocity(Pose2D{}, nan).has_value());
 }
 
 TEST(PurePursuit, ReplacingThePathClearsTheOldOne)

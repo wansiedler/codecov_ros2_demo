@@ -15,6 +15,7 @@
 #include "nav_utils/battery_monitor.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 namespace nav_utils
@@ -33,6 +34,14 @@ BatteryMonitor::BatteryMonitor(int cell_count, const BatteryThresholds & thresho
 
 double BatteryMonitor::percent_from_voltage(double pack_voltage) const
 {
+  // A garbled CAN frame can deliver NaN or an infinity. std::clamp would pass
+  // NaN through untouched, every threshold comparison against it is false, and
+  // the pack would look healthy. Report empty instead: that drives the state to
+  // Critical, which is the safe direction for a wrong reading.
+  if (!std::isfinite(pack_voltage)) {
+    return 0.0;
+  }
+
   const double cell_voltage = pack_voltage / static_cast<double>(cell_count_);
   const double span = kFullCellVoltage - kEmptyCellVoltage;
   const double ratio = (cell_voltage - kEmptyCellVoltage) / span;
