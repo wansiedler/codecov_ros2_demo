@@ -37,6 +37,7 @@ def main() -> int:
 
     total = 0
     for report in reports:
+        # nosemgrep: python.lang.security.use-defused-xml-parse.use-defused-xml-parse
         errors = ElementTree.parse(report).getroot().findall("error")  # nosec B314
         total += len(errors)
         name = report.stem
