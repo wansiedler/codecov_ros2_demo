@@ -15,6 +15,10 @@ concurrency:
 
 jobs:
   release-please:
+    # Needs the GitHub API, so it only makes sense on GitHub; under act it would
+    # retry until the run looks stuck. The env context is not available in a
+    # job-level condition, so this keys on the actor act reports instead.
+    if: github.actor != 'nektos/act'
     name: release-please
     runs-on: ubuntu-latest
     timeout-minutes: 10
