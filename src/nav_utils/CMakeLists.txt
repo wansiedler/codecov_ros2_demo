@@ -7,14 +7,25 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wnon-virtual-dtor)
 endif()
+
+# Export compile_commands.json so clang-tidy and IDEs can analyse the package.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Enabled by CI: -DCOVERAGE=ON makes gcc emit .gcno/.gcda used by lcov.
 option(COVERAGE "Build with gcov instrumentation" OFF)
 if(COVERAGE)
   add_compile_options(-O0 -g --coverage -fprofile-abs-path)
   add_link_options(--coverage)
+endif()
+
+# Runtime analysis: -DSANITIZE=address,undefined (or thread) instruments the
+# binaries so the test run itself reports memory and UB errors.
+set(SANITIZE "" CACHE STRING "Comma separated sanitizer list passed to -fsanitize")
+if(SANITIZE)
+  add_compile_options(-O1 -g -fno-omit-frame-pointer -fsanitize=${SANITIZE})
+  add_link_options(-fsanitize=${SANITIZE})
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -54,6 +65,37 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_safety_zone test/test_safety_zone.cpp)
   target_link_libraries(test_safety_zone nav_utils_core)
+
+  # Linters are registered as ctest tests, so `colcon test` runs style, licence
+  # and static analysis checks next to the unit tests. Selected explicitly
+  # instead of ament_lint_common, which would also run uncrustify and fight the
+  # clang-format configuration in .clang-format.
+  #
+  # Looked up quietly on purpose: the coverage, sanitizer and CodeQL jobs build
+  # the package without the linter packages installed, and a hard requirement
+  # would break those builds instead of just skipping the style checks.
+  find_package(ament_cmake_copyright QUIET)
+  find_package(ament_cmake_cppcheck QUIET)
+  find_package(ament_cmake_cpplint QUIET)
+  find_package(ament_cmake_lint_cmake QUIET)
+  find_package(ament_cmake_xmllint QUIET)
+
+  if(ament_cmake_copyright_FOUND)
+    ament_copyright()
+  endif()
+  if(ament_cmake_cppcheck_FOUND)
+    ament_cppcheck(LANGUAGE c++)
+  endif()
+  if(ament_cmake_cpplint_FOUND)
+    ament_cpplint(FILTERS -build/header_guard -build/include_order -whitespace/braces
+      -whitespace/newline)
+  endif()
+  if(ament_cmake_lint_cmake_FOUND)
+    ament_lint_cmake()
+  endif()
+  if(ament_cmake_xmllint_FOUND)
+    ament_xmllint()
+  endif()
 endif()
 
 ament_export_include_directories(include)

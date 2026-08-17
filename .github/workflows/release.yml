@@ -1,0 +1,27 @@
+---
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false   # never interrupt a release in flight
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Reads the Conventional Commits since the last tag, maintains a release
+      # pull request with the generated CHANGELOG, and tags on merge.
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071  # v4
+        with:
+          release-type: simple
+          package-name: nav_utils
