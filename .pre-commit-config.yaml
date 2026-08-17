@@ -1,6 +1,11 @@
 # Local gate that mirrors the CI lint job: install with `pre-commit install`.
 # Run over the whole tree once with `pre-commit run --all-files`.
 ---
+# A plain `pre-commit install` only wires the pre-commit stage, so the message
+# and push checks below would sit in the config and never run. Listing them here
+# makes one install command set up all three.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+
 default_language_version:
   python: python3
 
@@ -87,6 +92,12 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+      # Checks the whole range being pushed, which is what the CI job does on the
+      # pull request. Catches a commit that arrived by another route - a rebase,
+      # a cherry-pick, or a bot writing straight into the branch.
+      - id: commitizen-branch
+        stages: [pre-push]
+        args: [--rev-range, origin/main..HEAD]
 
   - repo: local
     hooks:
