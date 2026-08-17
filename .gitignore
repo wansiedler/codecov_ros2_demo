@@ -1,0 +1,9 @@
+build/
+install/
+log/
+coverage.info
+coverage_html/
+*.gcda
+*.gcno
+*.gcov
+.DS_Store
