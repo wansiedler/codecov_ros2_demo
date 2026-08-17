@@ -9,6 +9,11 @@ SHELL := /bin/bash
 ROS_SETUP ?= /opt/ros/jazzy/setup.bash
 BUILD_TYPE ?= Debug
 PACKAGE ?= nav_utils
+# Appended to every colcon build, so CI can add ccache launchers or
+# -DWARNINGS_AS_ERRORS without redefining the command.
+CMAKE_ARGS ?=
+SANITIZE ?= address,undefined
+MEMCHECK_DIR ?= memcheck
 LCOV_IGNORE := mismatch,gcov,unused,empty,negative
 BRANCH_COVERAGE := --rc branch_coverage=1
 
@@ -24,7 +29,7 @@ help:  ## Show this list
 .PHONY: build
 build:  ## Build the workspace
 	$(ros) colcon build --event-handlers console_direct+ \
-		--cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+		--cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) $(CMAKE_ARGS)
 
 .PHONY: test
 test:  ## Build and run the tests
@@ -33,8 +38,10 @@ test:  ## Build and run the tests
 
 .PHONY: coverage
 coverage:  ## Build with gcov, run the tests, write coverage_html/
-	$(ros) colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
-	$(ros) colcon test --packages-select $(PACKAGE) --ctest-args -R "^test_"
+	$(ros) colcon build --event-handlers console_direct+ \
+		--cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON $(CMAKE_ARGS)
+	$(ros) colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
+	$(ros) colcon test-result --verbose
 	lcov --capture --initial --directory build --output-file coverage.base \
 		--ignore-errors $(LCOV_IGNORE) $(BRANCH_COVERAGE)
 	lcov --capture --directory build --output-file coverage.run \
@@ -63,34 +70,47 @@ tidy:  ## Run clang-tidy against the compilation database
 	$(ros) colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 	$(ros) run-clang-tidy -p build/$(PACKAGE) -quiet "$(CURDIR)/src/$(PACKAGE)/src/.*\.cpp"
 
-.PHONY: asan
-asan:  ## Build and test under AddressSanitizer and UBSan
-	$(ros) colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=address,undefined
+.PHONY: sanitize
+sanitize:  ## Build and test under SANITIZE=... (default address,undefined)
+	$(ros) colcon build --event-handlers console_direct+ \
+		--cmake-args -DCMAKE_BUILD_TYPE=Debug "-DSANITIZE=$(SANITIZE)" $(CMAKE_ARGS)
 	ASAN_OPTIONS=detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1 \
 	UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
-		$(ros) colcon test --packages-select $(PACKAGE) --ctest-args -R "^test_"
+	TSAN_OPTIONS=halt_on_error=1 \
+		$(ros) colcon test --event-handlers console_direct+ \
+			--packages-select $(PACKAGE) --ctest-args -R "^test_"
 	$(ros) colcon test-result --verbose
+
+.PHONY: asan
+asan:  ## Shorthand for SANITIZE=address,undefined
+	$(MAKE) sanitize SANITIZE=address,undefined
 
 .PHONY: tsan
-tsan:  ## Build and test under ThreadSanitizer
+tsan:  ## Shorthand for SANITIZE=thread
 	@echo "note: needs vm.mmap_rnd_bits=28 on a 6.x kernel"
-	$(ros) colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug -DSANITIZE=thread
-	TSAN_OPTIONS=halt_on_error=1 \
-		$(ros) colcon test --packages-select $(PACKAGE) --ctest-args -R "^test_"
-	$(ros) colcon test-result --verbose
+	$(MAKE) sanitize SANITIZE=thread
 
 .PHONY: memcheck
-memcheck:  ## Run the unit tests under valgrind
-	$(ros) colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug
-	@status=0; \
+memcheck:  ## Run the unit tests under valgrind, write $(MEMCHECK_DIR)/*.xml
+	$(ros) colcon build --event-handlers console_direct+ \
+		--cmake-args -DCMAKE_BUILD_TYPE=Debug $(CMAKE_ARGS)
+	@mkdir -p $(MEMCHECK_DIR); status=0; \
 	for binary in build/$(PACKAGE)/test_*; do \
 		[ -x "$$binary" ] || continue; \
-		echo "== $$binary"; \
+		name=$$(basename "$$binary"); \
+		echo "::group::valgrind $$name"; \
 		valgrind --tool=memcheck --leak-check=full \
 			--show-leak-kinds=definite,indirect --track-origins=yes \
-			--error-exitcode=42 "$$binary" || status=$$?; \
+			--error-exitcode=42 --xml=yes --xml-file="$(MEMCHECK_DIR)/$$name.xml" \
+			"$$binary" || status=$$?; \
+		echo "::endgroup::"; \
 	done; \
+	$(MAKE) --no-print-directory memcheck-summary; \
 	exit $$status
+
+.PHONY: memcheck-summary
+memcheck-summary:  ## Print the findings from $(MEMCHECK_DIR)/*.xml
+	@python3 scripts/memcheck_summary.py $(MEMCHECK_DIR)
 
 .PHONY: fuzz
 fuzz:  ## Build the libFuzzer targets (clang only) into build/fuzz

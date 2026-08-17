@@ -50,44 +50,13 @@ jobs:
             ccache-coverage-
             ccache-
 
-      - name: Build with gcov instrumentation
+      - name: Build, test and collect coverage
         shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon build \
-            --event-handlers console_direct+ \
-            --cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          ccache --show-stats || true
-
-      - name: Run tests
-        shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
-          colcon test-result --verbose
-
-      - name: Collect coverage
-        run: |
-          IGNORE=mismatch,gcov,unused,empty,negative
-          # Baseline from the .gcno files: without it, a source file that no
-          # test ever executes has no .gcda and would silently disappear from
-          # the report instead of showing up as 0 % covered.
-          lcov --capture --initial --directory build --output-file coverage.base \
-            --ignore-errors "$IGNORE" --rc branch_coverage=1
-          lcov --capture --directory build --output-file coverage.run \
-            --ignore-errors "$IGNORE" --rc branch_coverage=1
-          lcov --add-tracefile coverage.base --add-tracefile coverage.run \
-            --output-file coverage.info --ignore-errors "$IGNORE" --rc branch_coverage=1
-          # Keep only our own sources: no system headers, no gtest, no test code.
-          lcov --extract coverage.info "$GITHUB_WORKSPACE/src/*" \
-            --output-file coverage.info --ignore-errors unused --rc branch_coverage=1
-          lcov --remove coverage.info "*/test/*" \
-            --output-file coverage.info --ignore-errors unused --rc branch_coverage=1
-          lcov --list coverage.info --rc branch_coverage=1
-          genhtml coverage.info --branch-coverage --legend \
-            --title "nav_utils @ ${GITHUB_SHA}" --output-directory coverage_html \
-            --ignore-errors inconsistent,corrupt
+        env:
+          CMAKE_ARGS: >-
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        run: make coverage
 
       - name: Upload the browsable HTML report
         if: ${{ !env.ACT }}
