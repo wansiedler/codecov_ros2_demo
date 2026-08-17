@@ -75,7 +75,10 @@ runs:
           echo "rosdep update failed (attempt $attempt), retrying in $((attempt * 15))s"
           sleep $((attempt * 15))
         done
-        if [ -d "$HOME/.ros/rosdep/sources.cache" ]; then
+        # The directory alone proves nothing: a failed update leaves it behind
+        # empty, and rosdep install then reports an uninitialised installation.
+        # The index is the file it actually reads, so require a non-empty one.
+        if [ -s "$HOME/.ros/rosdep/sources.cache/index" ]; then
           echo "::warning::rosdep update kept failing; using the cached rules"
           exit 0
         fi
