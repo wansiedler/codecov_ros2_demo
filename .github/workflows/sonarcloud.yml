@@ -76,7 +76,7 @@ jobs:
           mkdir -p gcov
           find build -name '*.gcda' -exec gcov -p -b {} + > /dev/null
           mv ./*.gcov gcov/ 2>/dev/null || true
-          ls gcov | head
+          find gcov -name '*.gcov' | head
 
       - name: Run the analysis
         if: steps.config.outputs.enabled == 'true'
