@@ -18,3 +18,20 @@ updates:
       prefix: ci
     labels:
       - dependencies
+
+  # Dependabot parses .pre-commit-config.yaml and follows each hook's rev, which
+  # is otherwise only refreshed by running `pre-commit autoupdate` by hand.
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      pre-commit:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies
