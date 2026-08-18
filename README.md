@@ -32,6 +32,7 @@ reports test coverage on every commit and pull request.
 [![pre-commit](https://img.shields.io/badge/pre--commit-20%20hooks-FAB040?logo=pre-commit)](https://pre-commit.com/)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-FE5196?logo=conventionalcommits)](https://www.conventionalcommits.org/)
 [![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
+[![Fuzzing](https://img.shields.io/badge/fuzzing-ClusterFuzzLite-CC3333)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/fuzzing.yml)
 [![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/codecov_ros2_demo/blob/main/LICENSE)
 
@@ -131,6 +132,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Hardening | `-fstack-protector-strong`, `-fstack-clash-protection`, `-fcf-protection`, `_GLIBCXX_ASSERTIONS`, `_FORTIFY_SOURCE=3`, RELRO and a non-executable stack, each probed before use | build |
 | Integration | `launch_testing` drives the node over real topics | `CI` |
 | Runtime analysis | ASan + UBSan, TSan, Valgrind memcheck (XML artifacts) | `Runtime analysis` |
+| Fuzzing | ClusterFuzzLite with libFuzzer, address and undefined sanitizers, on every pull request and nightly | `Fuzzing` |
 | Profiling | Callgrind + `gprof2dot` SVG call graphs, nightly | `Runtime analysis` |
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
