@@ -192,7 +192,7 @@ so the two cannot drift:
 
 ```bash
 make help        # the list of targets
-make hooks       # install the commit, message and push hooks
+make hooks       # install the pre-commit, commit-msg and pre-push hooks
 make coverage    # gcov build, tests, browsable report
 make asan tsan   # the sanitizers
 make memcheck    # valgrind

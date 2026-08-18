@@ -62,7 +62,7 @@ lint:  ## Run every pre-commit hook over the whole tree
 	pre-commit run --all-files
 
 .PHONY: hooks
-hooks:  ## Install the commit, message and push hooks
+hooks:  ## Install the pre-commit, commit-msg and pre-push hooks
 	pre-commit install --install-hooks \
 		--hook-type pre-commit --hook-type commit-msg --hook-type pre-push
 
