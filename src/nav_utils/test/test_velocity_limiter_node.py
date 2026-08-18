@@ -22,13 +22,13 @@ and republishes on cmd_vel.
 import time
 import unittest
 
-from geometry_msgs.msg import Twist
 import launch
 import launch_ros.actions
 import launch_testing.actions
 import launch_testing.markers
 import pytest
 import rclpy
+from geometry_msgs.msg import Twist
 
 
 @pytest.mark.launch_test
@@ -36,20 +36,22 @@ import rclpy
 def generate_test_description():
     """Starts the node with limits the test can reason about."""
     node = launch_ros.actions.Node(
-        package='nav_utils',
-        executable='velocity_limiter_node',
-        parameters=[{
-            'max_linear': 0.5,
-            'max_angular': 1.0,
-            # High enough that the acceleration ramp never masks the clamp:
-            # this test is about the wiring, the ramp has its own unit tests.
-            'max_linear_accel': 1000.0,
-        }],
-        output='screen',
+        package="nav_utils",
+        executable="velocity_limiter_node",
+        parameters=[
+            {
+                "max_linear": 0.5,
+                "max_angular": 1.0,
+                # High enough that the acceleration ramp never masks the clamp:
+                # this test is about the wiring, the ramp has its own unit tests.
+                "max_linear_accel": 1000.0,
+            }
+        ],
+        output="screen",
     )
     return (
         launch.LaunchDescription([node, launch_testing.actions.ReadyToTest()]),
-        {'velocity_limiter': node},
+        {"velocity_limiter": node},
     )
 
 
@@ -65,11 +67,12 @@ class TestVelocityLimiterNode(unittest.TestCase):
         rclpy.shutdown()
 
     def setUp(self):
-        self.node = rclpy.create_node('velocity_limiter_test_client')
+        self.node = rclpy.create_node("velocity_limiter_test_client")
         self.received = []
-        self.publisher = self.node.create_publisher(Twist, 'cmd_vel_raw', 10)
+        self.publisher = self.node.create_publisher(Twist, "cmd_vel_raw", 10)
         self.subscription = self.node.create_subscription(
-            Twist, 'cmd_vel', self.received.append, 10)
+            Twist, "cmd_vel", self.received.append, 10
+        )
         self._wait_for_node()
 
     def tearDown(self):
@@ -80,10 +83,12 @@ class TestVelocityLimiterNode(unittest.TestCase):
         deadline = time.time() + timeout
         while time.time() < deadline:
             rclpy.spin_once(self.node, timeout_sec=0.1)
-            if (self.publisher.get_subscription_count() > 0 and
-                    self.subscription.get_publisher_count() > 0):
+            if (
+                self.publisher.get_subscription_count() > 0
+                and self.subscription.get_publisher_count() > 0
+            ):
                 return
-        self.fail('velocity_limiter_node never connected to the test topics')
+        self.fail("velocity_limiter_node never connected to the test topics")
 
     def _send(self, linear, angular, timeout=5.0):
         """Publishes one command and returns the first reply."""
@@ -98,7 +103,7 @@ class TestVelocityLimiterNode(unittest.TestCase):
             rclpy.spin_once(self.node, timeout_sec=0.1)
             if self.received:
                 return self.received[0]
-        self.fail(f'no reply on cmd_vel for linear={linear} angular={angular}')
+        self.fail(f"no reply on cmd_vel for linear={linear} angular={angular}")
         return None
 
     def test_passes_a_command_inside_the_limits(self):
