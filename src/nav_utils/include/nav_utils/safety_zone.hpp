@@ -48,6 +48,11 @@ public:
   /// Speed scaling factor in [0, 1] for the given obstacle distance.
   [[nodiscard]] double speed_scale(double obstacle_distance) const;
 
+  /// Speed scaling factor for a zone that has already been classified.
+  /// A value outside the enumeration scales to a full stop, because an
+  /// unrecognised zone is not a reason to keep driving.
+  [[nodiscard]] static double speed_scale(Zone zone);
+
   /// Scales @p velocity down so it is safe for the given obstacle distance.
   [[nodiscard]] double apply(double velocity, double obstacle_distance) const;
 
