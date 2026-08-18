@@ -9,6 +9,7 @@ Usage: scripts/memcheck_summary.py [directory]
 
 import pathlib
 import sys
+
 # The reports are written by the valgrind run this script just performed, not
 # fetched from anywhere, so the stdlib parser is not exposed to hostile XML.
 import xml.etree.ElementTree as ElementTree  # nosec B405

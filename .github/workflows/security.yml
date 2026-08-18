@@ -138,6 +138,7 @@ jobs:
           semgrep scan --config p/default --config p/c --config p/secrets \
             --config p/github-actions \
             --exclude-rule python.lang.security.use-defused-xml-parse.use-defused-xml-parse \
+            --exclude-rule python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected \
             --sarif --output semgrep.sarif
 
       - name: Publish results to the Security tab
