@@ -1,0 +1,66 @@
+---
+name: Super-Linter
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch: {}
+
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
+concurrency:
+  group: super-linter-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: super-linter
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # Super-Linter writes a commit status per linter when it may; without this it
+      # still reports through the job status.
+      statuses: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # Super-Linter diffs against the base commit to decide what changed,
+          # so a shallow clone would leave it with nothing to compare.
+          fetch-depth: 0
+
+      - name: Lint the whole repository
+        uses: super-linter/super-linter/slim@4ce20838b8ab83717e78138c5b3a1407148e0918  # v8.7.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: main
+
+          # This repository already runs clang-format, cpplint, cppcheck,
+          # ruff, yamllint, markdownlint, shellcheck, actionlint and gitleaks
+          # through pre-commit and the Lint workflow, each against a config
+          # that lives here. Super-Linter runs as a second opinion over the
+          # formats nothing else covers, rather than a second, differently
+          # configured copy of the same linters - two tools disagreeing about
+          # C++ style would make the repository unformattable.
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_JSON: true
+          VALIDATE_XML: true
+          VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_GITHUB_ACTIONS: true
+          VALIDATE_GITLEAKS: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_YAML: true
+          VALIDATE_BASH: true
+          VALIDATE_PYTHON_RUFF: true
+
+          # Point the shared linters at the configs the rest of the toolchain
+          # uses, so a rule change lands in one place.
+          LINTER_RULES_PATH: .
+          MARKDOWN_CONFIG_FILE: .markdownlint.yaml
+          YAML_CONFIG_FILE: .yamllint
+          PYTHON_RUFF_CONFIG_FILE: ruff.toml
+
+          # Build products and vendored reports are not ours to lint.
+          FILTER_REGEX_EXCLUDE: (build|install|log|coverage_html|memcheck)/.*
