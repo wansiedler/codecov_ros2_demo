@@ -29,9 +29,14 @@ jobs:
   build-test-coverage:
     name: build + test + coverage
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
+      packages: read
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -101,9 +106,14 @@ jobs:
   compilers:
     name: build with ${{ matrix.compiler }}
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
+      packages: read
       contents: read
     strategy:
       fail-fast: false
@@ -134,9 +144,14 @@ jobs:
   future-standard:
     name: C++26 canary
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     permissions:
+      packages: read
       contents: read
     # Never blocks: it reports what a future toolchain would say, the way the
     # Rolling distribution reports what the next ROS release will say. GCC 13 in

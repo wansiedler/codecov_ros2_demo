@@ -5,6 +5,11 @@ description: >
   Every job that builds this workspace repeated the same three steps; this keeps
   them in one place, which is what makes the setup portable to another repo.
 
+  On the prebuilt CI image (.github/docker/ci.Dockerfile) all of it is already
+  baked in, so every step below is skipped and only a package a job asks for
+  beyond the image is installed. Against a plain ros image the action behaves as
+  it always did, which is what keeps `act` runs working without a GHCR login.
+
 inputs:
   packages:
     description: Extra apt packages this job needs on top of the toolchain.
@@ -22,7 +27,41 @@ inputs:
 runs:
   using: composite
   steps:
+    # The image writes this marker; everything below keys off it rather than
+    # off the image name, so a job may still point at a plain ros image.
+    - name: Detect the prebuilt image
+      id: image
+      shell: bash
+      run: |
+        if [ -f /etc/ci-image.stamp ]; then
+          echo "prebuilt=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "prebuilt=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install what the image does not carry
+      if: steps.image.outputs.prebuilt == 'true'
+      shell: bash
+      env:
+        EXTRA_PACKAGES: ${{ inputs.packages }}
+      run: |
+        missing=""
+        for package in $EXTRA_PACKAGES; do
+          dpkg-query -W -f='${Status}' "$package" 2>/dev/null \
+            | grep -q "install ok installed" || missing="$missing $package"
+        done
+        if [ -z "$missing" ]; then
+          echo "the image already carries the toolchain and every extra"
+          exit 0
+        fi
+        echo "installing beyond the image:$missing"
+        apt-get update
+        # shellcheck disable=SC2086
+        apt-get install -y --no-install-recommends $missing
+        rm -rf /var/lib/apt/lists/*
+
     - name: Install the toolchain
+      if: steps.image.outputs.prebuilt != 'true'
       shell: bash
       env:
         EXTRA_PACKAGES: ${{ inputs.packages }}
@@ -55,6 +94,7 @@ runs:
     # from a hard failure into a warning: a restored sources.cache is all
     # `rosdep install` needs, so the update below is allowed to give up.
     - name: Cache the rosdep sources
+      if: steps.image.outputs.prebuilt != 'true'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
       with:
         path: ~/.ros/rosdep/sources.cache
@@ -62,6 +102,7 @@ runs:
         restore-keys: rosdep-${{ inputs.distro }}-
 
     - name: Update the rosdep rules
+      if: steps.image.outputs.prebuilt != 'true'
       shell: bash
       env:
         DISTRO: ${{ inputs.distro }}
@@ -86,5 +127,6 @@ runs:
         exit 1
 
     - name: Install the ROS dependencies
+      if: steps.image.outputs.prebuilt != 'true'
       shell: bash
       run: rosdep install --from-paths src --ignore-src -y

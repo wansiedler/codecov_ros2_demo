@@ -24,9 +24,14 @@ jobs:
   sanitizers:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
+      packages: read
       contents: read
     strategy:
       fail-fast: false
@@ -51,9 +56,14 @@ jobs:
   valgrind:
     name: valgrind memcheck
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     permissions:
+      packages: read
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -80,10 +90,15 @@ jobs:
   callgrind:
     name: callgrind profile
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     permissions:
+      packages: read
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
