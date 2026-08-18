@@ -14,6 +14,10 @@ inputs:
     description: gcc or clang. Selects the toolchain and exports CC and CXX.
     required: false
     default: gcc
+  distro:
+    description: The ROS distribution whose rosdep rules are fetched.
+    required: false
+    default: jazzy
 
 runs:
   using: composite
@@ -46,8 +50,41 @@ runs:
           echo "CXX=g++" >> "$GITHUB_ENV"
         fi
 
+    # rosdep fetches its rule files from raw.githubusercontent, which answers
+    # 429 once a repository runs enough jobs in parallel. The cache turns that
+    # from a hard failure into a warning: a restored sources.cache is all
+    # `rosdep install` needs, so the update below is allowed to give up.
+    - name: Cache the rosdep sources
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+      with:
+        path: ~/.ros/rosdep/sources.cache
+        key: rosdep-${{ inputs.distro }}-${{ github.run_id }}
+        restore-keys: rosdep-${{ inputs.distro }}-
+
+    - name: Update the rosdep rules
+      shell: bash
+      env:
+        DISTRO: ${{ inputs.distro }}
+      run: |
+        # Only this distribution: fetching every index costs extra requests
+        # against the same rate limit that is failing here.
+        for attempt in 1 2 3 4 5; do
+          if rosdep update --rosdistro "$DISTRO"; then
+            exit 0
+          fi
+          echo "rosdep update failed (attempt $attempt), retrying in $((attempt * 15))s"
+          sleep $((attempt * 15))
+        done
+        # The directory alone proves nothing: a failed update leaves it behind
+        # empty, and rosdep install then reports an uninitialised installation.
+        # The index is the file it actually reads, so require a non-empty one.
+        if [ -s "$HOME/.ros/rosdep/sources.cache/index" ]; then
+          echo "::warning::rosdep update kept failing; using the cached rules"
+          exit 0
+        fi
+        echo "::error::rosdep update failed and no cached rules are available"
+        exit 1
+
     - name: Install the ROS dependencies
       shell: bash
-      run: |
-        rosdep update
-        rosdep install --from-paths src --ignore-src -y
+      run: rosdep install --from-paths src --ignore-src -y

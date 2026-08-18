@@ -47,9 +47,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run: |
-          source /opt/ros/jazzy/setup.bash
-          colcon build --event-handlers console_direct+
+        run: make build
 
       - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
         with:
@@ -116,8 +114,16 @@ jobs:
 
       - name: Scan with the community rule sets
         run: |
+          # An in-source `nosemgrep` still ships the finding in the SARIF, only
+          # marked suppressed, and code scanning ignores that marking for third
+          # party uploads - the alert stays open. Dropping the rule here is what
+          # actually keeps it out. The one exclusion is the defusedxml rule: it
+          # is about untrusted documents, and the only parse in this repository
+          # reads valgrind reports the same script just produced.
           semgrep scan --config p/default --config p/c --config p/secrets \
-            --config p/github-actions --sarif --output semgrep.sarif
+            --config p/github-actions \
+            --exclude-rule python.lang.security.use-defused-xml-parse.use-defused-xml-parse \
+            --sarif --output semgrep.sarif
 
       - name: Publish results to the Security tab
         if: always() && !env.ACT
