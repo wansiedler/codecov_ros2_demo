@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
+
 #include "nav_utils/battery_monitor.hpp"
 
 using nav_utils::BatteryMonitor;
@@ -83,6 +85,18 @@ TEST(BatteryMonitor, RejectsNonPositiveCellCount)
 
   // A zero cell count would divide by zero; the constructor falls back to 1.
   EXPECT_DOUBLE_EQ(monitor.percent_from_voltage(4.2), 100.0);
+}
+
+TEST(BatteryMonitor, TreatsANonFiniteVoltageAsEmpty)
+{
+  BatteryMonitor monitor = make_monitor();
+
+  // A garbled CAN frame: NaN would otherwise pass through std::clamp and make
+  // every threshold comparison false, leaving the pack looking healthy.
+  EXPECT_DOUBLE_EQ(monitor.percent_from_voltage(std::numeric_limits<double>::quiet_NaN()), 0.0);
+  EXPECT_DOUBLE_EQ(monitor.percent_from_voltage(std::numeric_limits<double>::infinity()), 0.0);
+  EXPECT_EQ(monitor.update(std::numeric_limits<double>::quiet_NaN()), BatteryState::Critical);
+  EXPECT_TRUE(monitor.should_return_to_dock());
 }
 
 TEST(BatteryMonitor, StringifiesEveryState)

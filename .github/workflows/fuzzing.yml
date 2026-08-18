@@ -1,0 +1,49 @@
+---
+name: Fuzzing
+
+on:
+  pull_request:
+  schedule:
+    - cron: '47 2 * * *'   # nightly batch run over the accumulated corpus
+  workflow_dispatch: {}
+
+# Deny everything by default; each job grants only what it needs.
+permissions: {}
+
+concurrency:
+  group: fuzzing-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  fuzzing:
+    name: ${{ matrix.sanitizer }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [address, undefined]
+    steps:
+      - name: Build the fuzz targets
+        id: build
+        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1  # v1
+        with:
+          sanitizer: ${{ matrix.sanitizer }}
+          language: c++
+          # On a pull request, only the code it touches is worth fuzzing.
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          storage-repo-branch: main
+          storage-repo-branch-coverage: main
+
+      - name: Run the fuzz targets
+        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1  # v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fuzz-seconds: 300
+          sanitizer: ${{ matrix.sanitizer }}
+          # code-change on a pull request, batch on the nightly schedule.
+          mode: ${{ github.event_name == 'pull_request' && 'code-change' || 'batch' }}
+          output-sarif: true
