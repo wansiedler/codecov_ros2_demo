@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 
 #include "geometry_msgs/msg/twist.hpp"
@@ -49,9 +50,14 @@ private:
 
   void on_command(const geometry_msgs::msg::Twist & msg)
   {
-    const rclcpp::Time now = this->now();
-    const double dt = last_stamp_.nanoseconds() == 0 ? 0.0 : (now - last_stamp_).seconds();
-    last_stamp_ = now;
+    // Nanoseconds rather than rclcpp::Time arithmetic: subtracting two Time
+    // objects carries a clock-source check that can throw, and nothing here can
+    // reach that case - both stamps come from this node's own clock. Doing the
+    // arithmetic on the integer keeps the elapsed time obvious and the failure
+    // modes finite.
+    const int64_t now_nanos = this->now().nanoseconds();
+    const double dt = last_nanos_ == 0 ? 0.0 : static_cast<double>(now_nanos - last_nanos_) * 1e-9;
+    last_nanos_ = now_nanos;
 
     const Twist2D limited = limiter_.limit({msg.linear.x, msg.angular.z}, dt);
 
@@ -62,7 +68,7 @@ private:
   }
 
   VelocityLimiter limiter_;
-  rclcpp::Time last_stamp_{0, 0, RCL_ROS_TIME};
+  int64_t last_nanos_{0};  ///< nanoseconds of the previous command, 0 before the first
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
 };
