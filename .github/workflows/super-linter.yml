@@ -21,8 +21,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
-      # Super-Linter writes a check run per linter when it may; without this it
-      # still reports through the job status.
+      # Super-Linter writes a commit status per linter when it may; without
+      # this it still reports through the job status.
       statuses: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
