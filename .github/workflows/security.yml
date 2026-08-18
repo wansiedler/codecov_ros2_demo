@@ -28,9 +28,14 @@ jobs:
     if: github.actor != 'nektos/act'
     name: CodeQL (c-cpp)
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
+      packages: read
       contents: read
       security-events: write
     steps:
