@@ -16,3 +16,20 @@ __pycache__/
 # act reads secrets from here by default - never commit it
 .secrets
 .env
+
+# Produced by the same commands the workflows run, so a local reproduction
+# drops them into the checkout: the Sonar gcov copies, the callgrind profiles,
+# the scanner reports and the scanner's own log.
+gcov/
+callgrind/
+*.sarif
+scanner.log
+
+# CI points CCACHE_DIR at the workspace, so running with the same environment
+# puts the compiler cache here rather than under ~/.cache.
+.ccache/
+
+# Python tooling around the scripts and the launch tests.
+.venv/
+.pytest_cache/
+.mypy_cache/
