@@ -10,6 +10,7 @@ reports test coverage on every commit and pull request.
 [![Conventions](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml)
 [![Release](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml)
 [![SonarCloud](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml)
+[![Super-Linter](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/super-linter.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/super-linter.yml)
 
 [![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
 [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
