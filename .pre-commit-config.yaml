@@ -1,6 +1,11 @@
 # Local gate that mirrors the CI lint job: install with `pre-commit install`.
 # Run over the whole tree once with `pre-commit run --all-files`.
 ---
+# A plain `pre-commit install` only wires the pre-commit stage, so the message
+# and push checks below would sit in the config and never run. Listing them here
+# makes one install command set up all three.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+
 default_language_version:
   python: python3
 
@@ -19,7 +24,16 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-yaml
       - id: check-xml
+      - id: check-json
+      - id: check-toml
       - id: destroyed-symlinks
+      - id: check-symlinks
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: fix-byte-order-marker
+      - id: forbid-submodules
+      - id: check-vcs-permalinks
+      - id: check-docstring-first
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v22.1.8
@@ -64,6 +78,21 @@ repos:
     hooks:
       - id: gitleaks
 
+  # Python arrived with the helper scripts and the launch test, so it gets the
+  # same treatment as the C++: a formatter, a linter and a security check.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.3
+    hooks:
+      - id: ruff-format
+      - id: ruff
+        args: [--fix]
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        args: [--quiet]
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.49.1
     hooks:
@@ -78,6 +107,7 @@ repos:
     rev: 0.38.0
     hooks:
       - id: check-github-workflows
+      - id: check-github-actions
       - id: check-dependabot
 
   # Enforces Conventional Commits, which is what feeds the changelog and the
@@ -87,6 +117,12 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
+      # Checks the whole range being pushed, which is what the CI job does on the
+      # pull request. Catches a commit that arrived by another route - a rebase,
+      # a cherry-pick, or a bot writing straight into the branch.
+      - id: commitizen-branch
+        stages: [pre-push]
+        args: [--rev-range, origin/main..HEAD]
 
   - repo: local
     hooks:
