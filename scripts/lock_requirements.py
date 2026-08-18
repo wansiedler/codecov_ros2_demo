@@ -60,6 +60,10 @@ def resolve(spec: str) -> list[tuple[str, str]]:
 
 def wheel_hashes(name: str, version: str) -> list[str]:
     url = f"https://pypi.org/pypi/{name}/{version}/json"
+    # urlopen honours file:// and custom schemes; this one is built from a
+    # constant https base, and the check keeps it that way if PyPI ever moves.
+    if not url.startswith("https://"):
+        sys.exit(f"refusing a non-https endpoint: {url}")
     with urllib.request.urlopen(url, timeout=30) as response:  # nosec B310
         files = json.load(response)["urls"]
     return sorted({f["digests"]["sha256"] for f in files if f["packagetype"] == "bdist_wheel"})
