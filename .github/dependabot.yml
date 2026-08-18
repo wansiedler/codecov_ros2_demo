@@ -35,3 +35,35 @@ updates:
       prefix: ci
     labels:
       - dependencies
+
+  # The two base images are pinned by digest, which is what makes the build
+  # reproducible - and what makes it stale without something to move the pin.
+  - package-ecosystem: docker
+    directories:
+      - /.github/docker
+      - /.clusterfuzzlite
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies
+
+  # The tool versions are hash pinned, so a new release only arrives as a
+  # reviewable change; nothing else updates them.
+  - package-ecosystem: pip
+    directory: /requirements
+    schedule:
+      interval: weekly
+    groups:
+      python-tools:
+        patterns: ["*"]
+        update-types: [minor, patch]
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies

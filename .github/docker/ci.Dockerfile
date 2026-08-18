@@ -7,7 +7,10 @@
 #
 # The tag follows the ROS distribution, so a future distro bump is a new tag
 # rather than an edit to every workflow.
-FROM ros:jazzy-ros-base
+# Pinned by digest: the tag moves whenever the upstream image is rebuilt, and
+# with it every dependency baked in below - silently, on a schedule nobody
+# here controls. Dependabot proposes the new digest as a reviewable change.
+FROM ros:jazzy-ros-base@sha256:da725acf8b0f9f30c683e33ffbdcd6482d077af96d6fdc7688c5f4f280b7d923
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
