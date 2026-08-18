@@ -1,0 +1,89 @@
+---
+name: CI image
+
+# Rebuilds the prebuilt workspace image. Runs only when the recipe or the
+# dependency manifest changes, plus a weekly run so that the base image and the
+# apt packages pick up security updates without a code change.
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/docker/ci.Dockerfile
+      - .github/workflows/ci-image.yml
+      - src/nav_utils/package.xml
+  pull_request:
+    paths:
+      - .github/docker/ci.Dockerfile
+      - .github/workflows/ci-image.yml
+      - src/nav_utils/package.xml
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: ci-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    # act cannot log in to GHCR and has no use for a pushed image.
+    if: github.actor != 'nektos/act'
+    name: build and push
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f  # v3
+
+      - name: Log in to GHCR
+        # A fork PR only builds the image to prove the recipe still works; its
+        # token cannot write to the registry, so skip the login it would fail.
+        if: github.event.pull_request.head.repo.fork != true
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9  # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive the tags
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051  # v5
+        with:
+          images: ghcr.io/${{ github.repository }}/ci
+          # `jazzy` is the tag the workflows consume and only main may move it;
+          # a branch build publishes its own tag so a PR can be tried out by
+          # pointing the `container:` keys at it before the change is merged.
+          tags: |
+            type=raw,value=jazzy,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,format=short
+
+      - name: Build and push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8  # v6
+        with:
+          context: .
+          file: .github/docker/ci.Dockerfile
+          # A pull request from a fork gets a read-only token, so it may build
+          # the image to prove the recipe still works but must not push it.
+          push: ${{ github.event.pull_request.head.repo.fork != true }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Report what was published
+        run: |
+          {
+            echo "### CI image"
+            echo
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
