@@ -25,7 +25,17 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      # A pull request runs against the image its own CI image run just
+      # published, so a change to the recipe is exercised by the jobs that
+      # consume it. main - and a fork, which cannot push a tag - use the tag
+      # main publishes. The first push of a recipe change races the image
+      # build; rerun those jobs once it has finished.
+      image: >-
+        ghcr.io/${{ github.repository }}/ci:${{
+        (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork != true)
+        && format('pr-{0}', github.event.pull_request.number)
+        || 'jazzy' }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -57,7 +67,17 @@ jobs:
     name: valgrind memcheck
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      # A pull request runs against the image its own CI image run just
+      # published, so a change to the recipe is exercised by the jobs that
+      # consume it. main - and a fork, which cannot push a tag - use the tag
+      # main publishes. The first push of a recipe change races the image
+      # build; rerun those jobs once it has finished.
+      image: >-
+        ghcr.io/${{ github.repository }}/ci:${{
+        (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork != true)
+        && format('pr-{0}', github.event.pull_request.number)
+        || 'jazzy' }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +111,17 @@ jobs:
     name: callgrind profile
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/${{ github.repository }}/ci:jazzy
+      # A pull request runs against the image its own CI image run just
+      # published, so a change to the recipe is exercised by the jobs that
+      # consume it. main - and a fork, which cannot push a tag - use the tag
+      # main publishes. The first push of a recipe change races the image
+      # build; rerun those jobs once it has finished.
+      image: >-
+        ghcr.io/${{ github.repository }}/ci:${{
+        (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork != true)
+        && format('pr-{0}', github.event.pull_request.number)
+        || 'jazzy' }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
