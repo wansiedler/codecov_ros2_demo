@@ -2,7 +2,10 @@
 # builds as root by design - the OSS-Fuzz tooling writes to $SRC and $OUT as root
 # and ClusterFuzzLite drives it that way. Adding a USER line breaks the build,
 # and the image never runs as a service.
+# The CI image (.github/docker/ci.Dockerfile) is the same case: a GitHub Actions
+# job container writes the workspace under /__w as root before any step runs, so
+# a non-root USER breaks actions/checkout.
 DS-0002
 # HEALTHCHECK belongs to long-running service images. This one exists to compile
-# fuzz targets and exits.
+# fuzz targets and exits, and the CI image runs a build and exits the same way.
 DS-0026

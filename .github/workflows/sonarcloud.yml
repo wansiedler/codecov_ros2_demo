@@ -22,9 +22,24 @@ jobs:
   sonarcloud:
     name: analysis
     runs-on: ubuntu-latest
-    container: ros:jazzy-ros-base
+    container:
+      # A pull request runs against the image its own CI image run just
+      # published, so a change to the recipe is exercised by the jobs that
+      # consume it. main - and a fork, which cannot push a tag - use the tag
+      # main publishes. The first push of a recipe change races the image
+      # build; rerun those jobs once it has finished.
+      image: >-
+        ghcr.io/${{ github.repository }}/ci:${{
+        (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.fork != true)
+        && format('pr-{0}', github.event.pull_request.number)
+        || 'jazzy' }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     permissions:
+      packages: read
       contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
