@@ -187,12 +187,20 @@ a percentage on its own never tells you.
 
 ### Local setup
 
+Everything CI does has a target in the `Makefile`, spelled with the same flags,
+so the two cannot drift:
+
 ```bash
-pipx install pre-commit      # or: pip install --user pre-commit
-pre-commit install           # run the hooks on every commit
-pre-commit run --all-files   # run them over the whole tree once
+make help        # the list of targets
+make hooks       # install the commit, message and push hooks
+make coverage    # gcov build, tests, browsable report
+make asan tsan   # the sanitizers
+make memcheck    # valgrind
+make ci          # lint, coverage, clang-tidy, asan, memcheck
 ```
 
+The targets are thin wrappers: `make -n asan` prints the commands rather than
+hiding them.
 Sanitizer and memcheck builds are plain CMake options, so the same checks run
 locally:
 
