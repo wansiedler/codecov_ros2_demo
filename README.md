@@ -124,7 +124,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Static analysis | `cppcheck` / `ament_cppcheck`, `clang-tidy` (`.clang-tidy`, warnings are errors) | pre-commit + `Lint` |
 | Licence headers | `ament_copyright` | `Lint` |
 | Manifests & schemas | `ament_xmllint`, `check-jsonschema` for workflows and Dependabot | pre-commit + `Lint` |
-| Commit hygiene | `commitizen` (Conventional Commits, `commit-msg` hook + CI), semantic PR title | pre-commit + `Conventions` |
+| Commit hygiene | `commitizen` on the message being written, on the range being pushed, and again in CI; semantic pull request title | pre-commit + `Conventions` |
 | Secrets | `gitleaks` (working tree locally, full history in CI) | pre-commit + `Security` |
 | Code scanning | CodeQL `security-and-quality`, Trivy, Semgrep, OSV-Scanner, OpenSSF Scorecard | `Security` |
 | Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot | `Security` |
@@ -192,11 +192,20 @@ so the two cannot drift:
 
 ```bash
 make help        # the list of targets
-make hooks       # install the commit, message and push hooks
+make hooks       # install the pre-commit, commit-msg and pre-push hooks
 make coverage    # gcov build, tests, browsable report
 make asan tsan   # the sanitizers
 make memcheck    # valgrind
 make ci          # lint, coverage, clang-tidy, asan, memcheck
+```
+
+Without the `Makefile`, `pre-commit` alone wires every stage, because the
+configuration names the hook types it needs:
+
+```bash
+pipx install pre-commit      # or: pip install --user pre-commit
+pre-commit install           # pre-commit, commit-msg and pre-push in one go
+pre-commit run --all-files   # run them over the whole tree once
 ```
 
 The targets are thin wrappers: `make -n asan` prints the commands rather than
