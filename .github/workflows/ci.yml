@@ -26,21 +26,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  image:
+    name: resolve the CI image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: read
+    outputs:
+      ref: ${{ steps.pick.outputs.ref }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - id: pick
+        uses: ./.github/actions/ci-image
+
   build-test-coverage:
     name: build + test + coverage
     runs-on: ubuntu-latest
+    needs: image
     container:
-      # A pull request runs against the image its own CI image run just
-      # published, so a change to the recipe is exercised by the jobs that
-      # consume it. main - and a fork, which cannot push a tag - use the tag
-      # main publishes. The first push of a recipe change races the image
-      # build; rerun those jobs once it has finished.
-      image: >-
-        ghcr.io/${{ github.repository }}/ci:${{
-        (github.event_name == 'pull_request'
-        && github.event.pull_request.head.repo.fork != true)
-        && format('pr-{0}', github.event.pull_request.number)
-        || 'jazzy' }}
+      # Which tag this is, and why, is decided by the image job.
+      image: ${{ needs.image.outputs.ref }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -116,18 +124,10 @@ jobs:
   compilers:
     name: build with ${{ matrix.compiler }}
     runs-on: ubuntu-latest
+    needs: image
     container:
-      # A pull request runs against the image its own CI image run just
-      # published, so a change to the recipe is exercised by the jobs that
-      # consume it. main - and a fork, which cannot push a tag - use the tag
-      # main publishes. The first push of a recipe change races the image
-      # build; rerun those jobs once it has finished.
-      image: >-
-        ghcr.io/${{ github.repository }}/ci:${{
-        (github.event_name == 'pull_request'
-        && github.event.pull_request.head.repo.fork != true)
-        && format('pr-{0}', github.event.pull_request.number)
-        || 'jazzy' }}
+      # Which tag this is, and why, is decided by the image job.
+      image: ${{ needs.image.outputs.ref }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -164,18 +164,10 @@ jobs:
   future-standard:
     name: C++26 canary
     runs-on: ubuntu-latest
+    needs: image
     container:
-      # A pull request runs against the image its own CI image run just
-      # published, so a change to the recipe is exercised by the jobs that
-      # consume it. main - and a fork, which cannot push a tag - use the tag
-      # main publishes. The first push of a recipe change races the image
-      # build; rerun those jobs once it has finished.
-      image: >-
-        ghcr.io/${{ github.repository }}/ci:${{
-        (github.event_name == 'pull_request'
-        && github.event.pull_request.head.repo.fork != true)
-        && format('pr-{0}', github.event.pull_request.number)
-        || 'jazzy' }}
+      # Which tag this is, and why, is decided by the image job.
+      image: ${{ needs.image.outputs.ref }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}

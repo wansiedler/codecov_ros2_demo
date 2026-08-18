@@ -1,0 +1,82 @@
+---
+name: Resolve the CI image
+description: >
+  Decides which tag of the prebuilt workspace image a job should run in.
+
+  A pull request that changes the recipe must run against the image its own
+  CI image run publishes, otherwise the change ships untested. Every other
+  pull request - the overwhelming majority - never triggers that workflow, so
+  the tag it would ask for does not exist and the job used to die at
+  "Initialize containers" with `manifest unknown`, before its first step.
+
+  So the tag is chosen from what actually happened: the recipe changed in this
+  pull request or it did not.
+
+outputs:
+  ref:
+    description: The fully qualified image reference to put in `container.image`.
+    value: ${{ steps.pick.outputs.ref }}
+
+runs:
+  using: composite
+  steps:
+    - id: pick
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REGISTRY: ghcr.io/${{ github.repository }}/ci
+        ACTOR: ${{ github.actor }}
+        EVENT: ${{ github.event_name }}
+        FORK: ${{ github.event.pull_request.head.repo.fork }}
+        NUMBER: ${{ github.event.pull_request.number }}
+        REPOSITORY: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        stable="$REGISTRY:jazzy"
+
+        # act has no GHCR login and no API. The ros-workspace action installs
+        # everything itself when the image carries no marker, so a plain ros
+        # image is exactly what a local run wants.
+        if [ -n "${ACT:-}" ]; then
+          echo "ref=ros:jazzy-ros-base" >> "$GITHUB_OUTPUT"
+          echo "running under act: ros:jazzy-ros-base"
+          exit 0
+        fi
+
+        # A fork cannot push a tag, and anything that is not a pull request
+        # consumes what main publishes.
+        if [ "$EVENT" != "pull_request" ] || [ "$FORK" = "true" ]; then
+          echo "ref=$stable" >> "$GITHUB_OUTPUT"
+          echo "not a pull request of this repository: $stable"
+          exit 0
+        fi
+
+        # These are the paths .github/workflows/ci-image.yml triggers on. A
+        # pull request touching none of them publishes no image, and asking
+        # for its tag would be asking for something nobody built.
+        recipe=$(gh api "repos/$REPOSITORY/pulls/$NUMBER/files" --paginate \
+          --jq '.[].filename' | grep -cE \
+          '^(\.github/docker/ci\.Dockerfile|\.github/workflows/ci-image\.yml|src/nav_utils/package\.xml)$' || true)
+        if [ "$recipe" -eq 0 ]; then
+          echo "ref=$stable" >> "$GITHUB_OUTPUT"
+          echo "the recipe is untouched: $stable"
+          exit 0
+        fi
+
+        # The recipe did change, so the image is being rebuilt right now by a
+        # workflow this one cannot depend on. Waiting is the point: falling
+        # back to the stable tag here would test the old image and report the
+        # new one as green.
+        candidate="$REGISTRY:pr-$NUMBER"
+        echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+        for attempt in $(seq 1 30); do
+          if docker manifest inspect "$candidate" >/dev/null 2>&1; then
+            echo "ref=$candidate" >> "$GITHUB_OUTPUT"
+            echo "the recipe changed and its image is published: $candidate"
+            exit 0
+          fi
+          echo "waiting for $candidate (attempt $attempt/30)"
+          sleep 20
+        done
+        echo "::error::$candidate never appeared; is the CI image run failing?"
+        exit 1
