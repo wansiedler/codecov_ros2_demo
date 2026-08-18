@@ -99,8 +99,7 @@ target_include_directories(nav_utils_core PUBLIC
 )
 
 add_executable(velocity_limiter_node src/velocity_limiter_node.cpp)
-target_link_libraries(velocity_limiter_node nav_utils_core)
-ament_target_dependencies(velocity_limiter_node rclcpp geometry_msgs)
+target_link_libraries(velocity_limiter_node nav_utils_core rclcpp::rclcpp ${geometry_msgs_TARGETS})
 
 install(TARGETS nav_utils_core
   ARCHIVE DESTINATION lib
