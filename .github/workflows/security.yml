@@ -62,7 +62,7 @@ jobs:
       - name: Set up the workspace
         uses: ./.github/actions/ros-workspace
 
-      - uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+      - uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
         with:
           languages: c-cpp
           build-mode: manual
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: make build
 
-      - uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+      - uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
         with:
           category: /language:c-cpp
 
@@ -118,7 +118,7 @@ jobs:
 
       - name: Publish results to the Security tab
         if: ${{ !env.ACT }}
-        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
         with:
           sarif_file: trivy-results.sarif
           category: trivy
@@ -152,7 +152,7 @@ jobs:
 
       - name: Publish results to the Security tab
         if: always() && !env.ACT
-        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
         with:
           sarif_file: semgrep.sarif
           category: semgrep
@@ -197,7 +197,7 @@ jobs:
 
       - name: Publish results to the Security tab
         if: always() && !env.ACT
-        uses: github/codeql-action/upload-sarif@5595ccaf912efad79be6eef63a5619ff05969be3  # v4.37.6
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4.37.7
         with:
           sarif_file: osv.sarif
           category: osv-scanner
