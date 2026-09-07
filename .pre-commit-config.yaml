@@ -81,7 +81,7 @@ repos:
   # Python arrived with the helper scripts and the launch test, so it gets the
   # same treatment as the C++: a formatter, a linter and a security check.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
+    rev: v0.16.5
     hooks:
       - id: ruff-format
       - id: ruff
