@@ -36,7 +36,7 @@ repos:
       - id: check-docstring-first
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.8
+    rev: v23.1.0
     hooks:
       - id: clang-format
         types_or: [c++, c]
@@ -81,7 +81,7 @@ repos:
   # Python arrived with the helper scripts and the launch test, so it gets the
   # same treatment as the C++: a formatter, a linter and a security check.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
+    rev: v0.16.5
     hooks:
       - id: ruff-format
       - id: ruff
@@ -113,7 +113,7 @@ repos:
   # Enforces Conventional Commits, which is what feeds the changelog and the
   # release-please version bumps.
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.17.0
+    rev: v4.18.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
