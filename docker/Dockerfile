@@ -56,11 +56,18 @@ RUN existing=$(getent passwd "${USER_ID}" | cut -d: -f1 || true) \
  && chown -R "${USER_ID}:${GROUP_ID}" "/home/${USER_NAME}"
 
 COPY --chmod=0755 docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chown=${USER_ID}:${GROUP_ID} docker/.bashrc /home/${USER_NAME}/.bashrc
 
 # Numeric, so the id resolves even when USER_NAME was renamed onto an existing
 # account (hadolint DL3002 / DL3066).
 USER ${USER_ID}
 WORKDIR /home/${USER_NAME}/ws
+
+# oh-my-bash for the interactive shell (theme, git completions), cloned as the
+# user so it lands under $HOME with the right owner, pinned to a commit. The
+# build fails loudly if the clone does - no silent `|| true`.
+RUN git clone --quiet https://github.com/ohmybash/oh-my-bash.git "/home/${USER_NAME}/.oh-my-bash" \
+ && git -C "/home/${USER_NAME}/.oh-my-bash" checkout --quiet 7d26139293dea898a98cf4adacc19af4b0955145
 
 # Liveness for tools that insist on one: the ROS underlay is there.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
