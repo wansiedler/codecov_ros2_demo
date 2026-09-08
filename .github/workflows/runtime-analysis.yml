@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '31 3 * * *'   # nightly: valgrind and callgrind are too slow per push
   workflow_dispatch: {}
@@ -22,6 +23,10 @@ concurrency:
 
 jobs:
   image:
+    # A draft is work in progress: this waits until the pull request is marked
+    # ready (ready_for_review above starts it then), and every job that needs
+    # this one waits with it.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: resolve the CI image
     runs-on: ubuntu-latest
     timeout-minutes: 15

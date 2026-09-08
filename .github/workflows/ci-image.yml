@@ -79,11 +79,13 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Report what was published
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
         run: |
           {
             echo "### CI image"
             echo
             echo '```'
-            echo "${{ steps.meta.outputs.tags }}"
+            echo "$TAGS"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
