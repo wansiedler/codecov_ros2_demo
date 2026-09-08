@@ -75,3 +75,15 @@ TEST(SafetyZone, HonoursCustomRadii)
   EXPECT_EQ(zone.classify(1.8), Zone::Warning);
   EXPECT_EQ(zone.classify(2.5), Zone::Clear);
 }
+
+TEST(SafetyZone, StopsForAZoneItDoesNotKnow)
+{
+  // Same reasoning as the battery state: the value is representable, so it can
+  // arrive from a corrupted field or a zone added later. The safe reading of an
+  // unrecognised zone is not "drive on" but "stop".
+  EXPECT_DOUBLE_EQ(SafetyZone::speed_scale(static_cast<Zone>(99)), 0.0);
+
+  // The classified overload still agrees with the distance one.
+  EXPECT_DOUBLE_EQ(SafetyZone::speed_scale(Zone::Stop), 0.0);
+  EXPECT_DOUBLE_EQ(SafetyZone::speed_scale(Zone::Clear), 1.0);
+}
