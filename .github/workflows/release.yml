@@ -320,7 +320,7 @@ jobs:
           {
             echo "## ✅ ${TAG} verified"
             echo
-            echo "Checksums, $(ls assets/*.sigstore.json | wc -l) signatures," \
+            echo "Checksums, $(find assets -name '*.sigstore.json' | wc -l) signatures," \
               "the provenance of every artifact and the image \`$IMAGE:$TAG\`" \
               "check out against \`$IDENTITY\`."
           } >> "$GITHUB_STEP_SUMMARY"
