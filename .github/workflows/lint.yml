@@ -126,6 +126,7 @@ jobs:
     permissions:
       packages: read
       contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -134,6 +135,32 @@ jobs:
         with:
           packages: clang-tidy
 
+      # The log feeds the SARIF below; pipefail keeps clang-tidy's verdict as
+      # the step's, so the job still blocks on a finding.
       - name: Analyse the package sources
+        id: tidy
         shell: bash
-        run: make tidy
+        run: |
+          set -o pipefail
+          make tidy 2>&1 | tee clang-tidy.log
+
+      # A scan that crashed must not publish: an empty SARIF would close every
+      # open clang-tidy alert as fixed. The converter refuses that case.
+      - name: Convert the findings to SARIF
+        id: sarif
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          TIDY_OUTCOME: ${{ steps.tidy.outcome }}
+        run: |
+          rc=0
+          [ "$TIDY_OUTCOME" = "success" ] || rc=1
+          scripts/clang_tidy_sarif.py clang-tidy.log clang-tidy.sarif \
+            --producer-rc "$rc" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish the findings to the Security tab
+        if: ${{ !cancelled() && steps.sarif.outcome == 'success' && !env.ACT }}
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+        with:
+          sarif_file: clang-tidy.sarif
+          category: clang-tidy

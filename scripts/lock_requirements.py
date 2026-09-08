@@ -20,8 +20,8 @@ import tempfile
 import urllib.request
 
 TOOLS = {
-    "commitizen": "commitizen==4.1.0",
-    "clang-format": "clang-format==22.1.8",
+    "commitizen": "commitizen==4.18.0",
+    "clang-format": "clang-format==23.1.0",
     "gprof2dot": "gprof2dot==2025.4.14",
 }
 
