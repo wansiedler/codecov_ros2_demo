@@ -1,0 +1,19 @@
+---
+# zizmor policy - https://docs.zizmor.sh/configuration/
+#
+# The job in security.yml runs informationally, so nothing here silences a
+# finding to keep CI green; an entry records a finding that was looked at and
+# accepted, with the reason, so it stops showing up as new.
+rules:
+  unpinned-images:
+    # The `image:` of every ROS job is the tag the image job resolved
+    # (.github/actions/ci-image): the prebuilt CI image on main, a branch
+    # build of it on a pull request that changes the recipe, and the plain
+    # ros:jazzy-ros-base tag when neither exists. It is an expression on
+    # purpose, and a digest cannot be pinned for a value chosen at run time.
+    ignore:
+      - ci.yml
+      - lint.yml
+      - runtime-analysis.yml
+      - security.yml
+      - sonarcloud.yml

@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '17 4 * * 1'   # weekly, so new advisories surface without a push
   workflow_dispatch: {}
@@ -22,6 +23,10 @@ concurrency:
 
 jobs:
   image:
+    # A draft is work in progress: this waits until the pull request is marked
+    # ready (ready_for_review above starts it then), and every job that needs
+    # this one waits with it.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: resolve the CI image
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -130,7 +135,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    needs: image
     container:
       image: semgrep/semgrep:1.173.0
     steps:
@@ -222,3 +226,60 @@ jobs:
           format: spdx-json
           artifact-name: nav_utils.spdx.json
           dependency-snapshot: true
+
+  zizmor:
+    # Needs the GitHub API for the upload, so it only makes sense on GitHub
+    # (see codeql above).
+    if: github.actor != 'nektos/act'
+    name: zizmor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read   # the SARIF upload reads the workflow run it belongs to
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Audits the workflows and the composite actions themselves, which no
+      # other scanner here reads: unpinned actions, template injection through
+      # an expression in a run block, a credential the checkout left behind,
+      # a permission no step uses. Informational for now - the findings go to
+      # the Security tab and the job Summary, and .github/zizmor.yml records
+      # the ones that are accepted. Drop --no-exit-codes to make it a gate.
+      - name: Audit the workflows
+        id: audit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}   # the online audits read the advisory database
+        run: |
+          docker run --rm --volume "$GITHUB_WORKSPACE:/workspace:ro" --workdir /workspace \
+            --env GH_TOKEN \
+            ghcr.io/zizmorcore/zizmor:1.29.0@sha256:863026d54f91271b10b60b67ad8054cb37120167e162482597db102b3026a284 \
+            --persona=regular --format=sarif --no-exit-codes -- . > zizmor.sarif
+          count=$(jq '[.runs[].results[]] | length' zizmor.sarif)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          {
+            if [ "$count" -eq 0 ]; then
+              echo "## ✅ zizmor: clean"
+            else
+              echo "## ⚠️ zizmor: $count finding(s), informational"
+              echo ""
+              echo "| rule | location | message |"
+              echo "| --- | --- | --- |"
+              jq -r '[.runs[].results[]][0:60][]
+                     | .locations[0].physicalLocation as $at
+                     | (.message.text | gsub("[|\n]"; " ") | .[0:120]) as $text
+                     | "| \(.ruleId) | \($at.artifactLocation.uri):\($at.region.startLine // "?") | \($text) |"' \
+                zizmor.sarif
+              echo ""
+              echo "_The same findings, with the fix each one suggests: Security → Code scanning, tool zizmor._"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish results to the Security tab
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
