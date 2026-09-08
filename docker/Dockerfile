@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # The ros images already ship a user at UID 1000 (`ubuntu` on noble); take the
-# id over rather than fail on it, the way the Navflex base images do, so the
+# id over rather than fail on it, so the
 # files colcon writes into the bind mount belong to the person on the host.
 # getent exits 2 when the id is free; under pipefail that must not end the RUN.
 RUN existing=$(getent passwd "${USER_ID}" | cut -d: -f1 || true) \
