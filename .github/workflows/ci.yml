@@ -100,8 +100,26 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Upload coverage to Codecov
+      # A run Dependabot triggers sees only the Dependabot secrets, and a run
+      # from a fork sees none, so neither has the token - and Codecov refuses
+      # a tokenless upload from a branch of this repository. Skipping is the
+      # honest outcome there; a token that is present and wrong still fails
+      # the job below.
+      - name: Check whether the Codecov token is available
+        id: codecov
         if: ${{ !env.ACT }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          if [ -n "$CODECOV_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::no CODECOV_TOKEN in this run (Dependabot and fork runs get none) - Codecov uploads skipped"
+          fi
+
+      - name: Upload coverage to Codecov
+        if: ${{ !env.ACT && steps.codecov.outputs.enabled == 'true' }}
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v7.0.0
         with:
           files: ./coverage.info
@@ -115,7 +133,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload the test results to Codecov
-        if: always() && !env.ACT
+        if: always() && !env.ACT && steps.codecov.outputs.enabled == 'true'
         uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3  # v1
         with:
           files: build/nav_utils/test_results/nav_utils/*.xml
