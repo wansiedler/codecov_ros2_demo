@@ -241,6 +241,33 @@ valgrind --leak-check=full build/nav_utils/test_velocity_limiter
 4. Push a commit or open a pull request — the CI workflow uploads the report and
    Codecov comments on the PR.
 
+## Running the tests in a container
+
+No ROS on the host needed. The image is the one CI runs in
+(`.github/docker/ci.Dockerfile`, published to GHCR by `ci-image.yml`) plus a
+user with your UID, so `build/`, `install/` and `log/` land in the checkout
+owned by you:
+
+```bash
+make docker-test    # colcon build + colcon test, exit status is colcon's
+make docker-shell   # a shell in the workspace: colcon, make, gdb, valgrind
+make docker-build   # rebuild the image after a toolchain change
+```
+
+`docker-compose.yaml` mounts the checkout as the workspace and keeps `ccache` in
+a named volume between runs. The test run prints a line per package and the
+stderr of whatever failed; `COLCON_EVENTS=console_direct+ make docker-test`
+streams everything the way CI does. A plain `docker compose up` starts the
+workspace only - `test` is a compose profile.
+`.devcontainer/devcontainer.json` attaches VS Code to the same service
+(*Dev Containers: Reopen in Container*). Without registry access, build the CI
+image locally first and point `BASE` at it:
+
+```bash
+docker build -f .github/docker/ci.Dockerfile -t local/ci:jazzy .
+BASE=local/ci:jazzy make docker-test
+```
+
 ## Running the tests locally
 
 Requires ROS 2 Jazzy and `lcov`:

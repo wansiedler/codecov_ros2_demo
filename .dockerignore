@@ -1,0 +1,14 @@
+# Nothing here is built into an image: the CI image copies package.xml only and
+# the dev image copies docker/entrypoint.sh; the checkout is bind-mounted at
+# run time. What is listed is what must never leak into a build context.
+.git
+build/
+install/
+log/
+coverage_html/
+coverage.*
+memcheck/
+gcov/
+.ccache/
+__pycache__/
+*.pyc
