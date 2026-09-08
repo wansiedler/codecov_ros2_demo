@@ -140,9 +140,9 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
 | CI report | One page per run in the Actions Summary and as a pull request comment: every suite and failing case, coverage per file with uncovered line ranges and the delta against `main`, compiler warnings, the verdict of each job | `CI` |
-| Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI` |
+| Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI`, `Housekeeping` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
-| Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
+| Releases | release-please: changelog and tags from the Conventional Commits; every release ships a source tarball, an SPDX SBOM and checksums, each signed keylessly with cosign, plus SLSA build provenance | `Release` |
 
 CodeQL, Trivy, Semgrep, OSV-Scanner and Scorecard publish SARIF, so their
 findings land in the repository's **Security → Code scanning** tab instead of
