@@ -579,7 +579,7 @@ def _request(token: str, url: str, method: str = "GET", data: object = None) -> 
         headers={
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
-            "User-Agent": "codecov_ros2_demo-ci-report",
+            "User-Agent": "perfect_ros2_atomic_package-ci-report",
         },
     )
     if data is not None:

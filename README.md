@@ -1,41 +1,40 @@
-# codecov_ros2_demo
+# perfect_ros2_atomic_package
 
-A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://about.codecov.io/)
-reports test coverage on every commit and pull request.
+A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate perfect CICD.
 
-[![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
-[![Lint](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml)
-[![Security](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/security.yml)
-[![Runtime analysis](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
-[![Conventions](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/conventions.yml)
-[![Release](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/release.yml)
-[![SonarCloud](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/sonarcloud.yml)
-[![Super-Linter](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/super-linter.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/super-linter.yml)
+[![CI](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/ci.yml)
+[![Lint](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/lint.yml)
+[![Security](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/security.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/security.yml)
+[![Runtime analysis](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/runtime-analysis.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/runtime-analysis.yml)
+[![Conventions](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/conventions.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/conventions.yml)
+[![Release](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/release.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/release.yml)
+[![SonarCloud](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/sonarcloud.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/sonarcloud.yml)
+[![Super-Linter](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/super-linter.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/super-linter.yml)
 
-[![codecov](https://codecov.io/gh/wansiedler/codecov_ros2_demo/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/codecov_ros2_demo)
-[![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Security rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Maintainability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Technical debt](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Code smells](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
-[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_codecov_ros2_demo&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=wansiedler_codecov_ros2_demo)
+[![codecov](https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package/graph/badge.svg?token=CT2tkB1DJ4)](https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package)
+[![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Security rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Reliability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Maintainability rating](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Technical debt](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Code smells](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Duplication](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
+[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
 
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wansiedler/codecov_ros2_demo/badge)](https://scorecard.dev/viewer/?uri=github.com/wansiedler/codecov_ros2_demo)
-[![CodeQL](https://img.shields.io/badge/CodeQL-security--and--quality-2088FF?logo=github)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ACodeQL)
-[![Semgrep](https://img.shields.io/badge/Semgrep-p%2Fdefault%20%C2%B7%20p%2Fc%20%C2%B7%20p%2Fsecrets-1B2B34?logo=semgrep)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ASemgrep)
-[![Trivy](https://img.shields.io/badge/Trivy-vuln%20%C2%B7%20secret%20%C2%B7%20misconfig-1904DA?logo=aqua)](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning?query=is%3Aopen+tool%3ATrivy)
-[![SBOM](https://img.shields.io/badge/SBOM-SPDX%20via%20Syft-0A7BBB)](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wansiedler/perfect_ros2_atomic_package/badge)](https://scorecard.dev/viewer/?uri=github.com/wansiedler/perfect_ros2_atomic_package)
+[![CodeQL](https://img.shields.io/badge/CodeQL-security--and--quality-2088FF?logo=github)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ACodeQL)
+[![Semgrep](https://img.shields.io/badge/Semgrep-p%2Fdefault%20%C2%B7%20p%2Fc%20%C2%B7%20p%2Fsecrets-1B2B34?logo=semgrep)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ASemgrep)
+[![Trivy](https://img.shields.io/badge/Trivy-vuln%20%C2%B7%20secret%20%C2%B7%20misconfig-1904DA?logo=aqua)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ATrivy)
+[![SBOM](https://img.shields.io/badge/SBOM-SPDX%20via%20Syft-0A7BBB)](https://github.com/wansiedler/perfect_ros2_atomic_package/network/dependencies)
 
 [![ROS 2](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros)](https://docs.ros.org/en/jazzy/)
 [![C++23](https://img.shields.io/badge/C%2B%2B-23-00599C?logo=cplusplus)](https://en.cppreference.com/w/cpp/23)
 [![pre-commit](https://img.shields.io/badge/pre--commit-20%20hooks-FAB040?logo=pre-commit)](https://pre-commit.com/)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-FE5196?logo=conventionalcommits)](https://www.conventionalcommits.org/)
-[![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
-[![Fuzzing](https://img.shields.io/badge/fuzzing-ClusterFuzzLite-CC3333)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/fuzzing.yml)
-[![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/runtime-analysis.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/codecov_ros2_demo/blob/main/LICENSE)
+[![Sanitizers](https://img.shields.io/badge/sanitizers-ASan%20%C2%B7%20UBSan%20%C2%B7%20TSan-8A2BE2)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/runtime-analysis.yml)
+[![Fuzzing](https://img.shields.io/badge/fuzzing-ClusterFuzzLite-CC3333)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/fuzzing.yml)
+[![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/runtime-analysis.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/perfect_ros2_atomic_package/blob/main/LICENSE)
 
 ## Coverage at a glance
 
@@ -44,7 +43,7 @@ Size encodes the number of statements, colour encodes coverage.
 
 | Sunburst | Grid | Icicle |
 | --- | --- | --- |
-| [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/sunburst.svg?token=CT2tkB1DJ4" width="220" alt="Coverage sunburst">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) | [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/tree.svg?token=CT2tkB1DJ4" width="220" alt="Coverage grid">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) | [<img src="https://codecov.io/gh/wansiedler/codecov_ros2_demo/graphs/icicle.svg?token=CT2tkB1DJ4" width="220" alt="Coverage icicle">](https://codecov.io/gh/wansiedler/codecov_ros2_demo) |
+| [<img src="https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package/graphs/sunburst.svg?token=CT2tkB1DJ4" width="220" alt="Coverage sunburst">](https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package) | [<img src="https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package/graphs/tree.svg?token=CT2tkB1DJ4" width="220" alt="Coverage grid">](https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package) | [<img src="https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package/graphs/icicle.svg?token=CT2tkB1DJ4" width="220" alt="Coverage icicle">](https://codecov.io/gh/wansiedler/perfect_ros2_atomic_package) |
 
 * **Sunburst** — innermost ring is the whole project, outward rings are folders
   and finally single files.
@@ -161,16 +160,16 @@ Every tool writes to its own place. This is what each of them answers.
 
 | Dashboard | Link | What it tells you |
 | --- | --- | --- |
-| Codecov overview | [app.codecov.io](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo) | Current coverage, sunburst and the file tree - which file is red |
-| Codecov commits | [/commits](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/commits) | Coverage per commit; the drop when untested code lands and the recovery |
-| Codecov pulls | [/pulls](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/pulls) | Per-pull-request comparison against the base, and the uncovered lines of the diff |
-| Codecov test analytics | [/tests/main](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/tests/main) | Flaky tests, failure history and test runtimes, fed by the JUnit XML |
-| SonarCloud | [sonarcloud.io](https://sonarcloud.io/dashboard?id=wansiedler_codecov_ros2_demo) | Bugs, code smells, security hotspots, duplication and the technical debt in hours |
-| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner, Scorecard, clang-tidy and zizmor findings, deduplicated per tool |
-| Dependency graph | [/network/dependencies](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
-| Actions | [/actions](https://github.com/wansiedler/codecov_ros2_demo/actions) | Every workflow run, its logs and its artifacts |
+| Codecov overview | [app.codecov.io](https://app.codecov.io/gh/wansiedler/perfect_ros2_atomic_package) | Current coverage, sunburst and the file tree - which file is red |
+| Codecov commits | [/commits](https://app.codecov.io/gh/wansiedler/perfect_ros2_atomic_package/commits) | Coverage per commit; the drop when untested code lands and the recovery |
+| Codecov pulls | [/pulls](https://app.codecov.io/gh/wansiedler/perfect_ros2_atomic_package/pulls) | Per-pull-request comparison against the base, and the uncovered lines of the diff |
+| Codecov test analytics | [/tests/main](https://app.codecov.io/gh/wansiedler/perfect_ros2_atomic_package/tests/main) | Flaky tests, failure history and test runtimes, fed by the JUnit XML |
+| SonarCloud | [sonarcloud.io](https://sonarcloud.io/dashboard?id=wansiedler_perfect_ros2_atomic_package) | Bugs, code smells, security hotspots, duplication and the technical debt in hours |
+| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner, Scorecard, clang-tidy and zizmor findings, deduplicated per tool |
+| Dependency graph | [/network/dependencies](https://github.com/wansiedler/perfect_ros2_atomic_package/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
+| Actions | [/actions](https://github.com/wansiedler/perfect_ros2_atomic_package/actions) | Every workflow run, its logs and its artifacts |
 | CI report | The *Summary* tab of a `CI` run, and the `CI report` comment on the pull request | Failing cases with their assertion text, the slowest tests, coverage per file with the exact uncovered lines and the change against `main`, compiler warnings, which job failed on which step |
-| Coverage on Pages | [wansiedler.com/codecov_ros2_demo](http://wansiedler.com/codecov_ros2_demo/) | The browsable lcov report for `main`, line by line |
+| Coverage on Pages | [wansiedler.com/perfect_ros2_atomic_package](http://wansiedler.com/perfect_ros2_atomic_package/) | The browsable lcov report for `main`, line by line |
 
 Rule of thumb: **Codecov** answers *"is the thing I just changed tested?"*,
 **SonarCloud** answers *"how bad is the code and what does fixing it cost?"*,
