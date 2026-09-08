@@ -6,7 +6,7 @@
 # The sources use nothing newer than C++20 (std::numbers, ranges), which keeps
 # them buildable with whatever clang the base image carries.
 
-SRC_DIR="$SRC/codecov_ros2_demo/src/nav_utils"
+SRC_DIR="$SRC/perfect_ros2_atomic_package/src/nav_utils"
 
 for target in "$SRC_DIR"/fuzz/fuzz_*.cpp; do
   name="$(basename "$target" .cpp)"

@@ -110,7 +110,7 @@ def render(points, out_path: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--repo", default="wansiedler/codecov_ros2_demo")
+    parser.add_argument("--repo", default="wansiedler/perfect_ros2_atomic_package")
     parser.add_argument("--branch", default="main")
     parser.add_argument("--limit", type=int, default=12)
     parser.add_argument("-o", "--output", default="docs/coverage-trend.svg")
