@@ -114,9 +114,9 @@ jobs:
           cp "$BUNDLE" "dist/${NAME}.intoto.jsonl"
           gh release upload "$TAG" dist/* --clobber
           {
-            echo "## 📦 ${TAG}: $(ls dist | wc -l) signed asset(s)"
+            echo "## 📦 ${TAG}: $(find dist -type f | wc -l) signed asset(s)"
             echo ""
             echo '```'
-            ls -1 dist
+            find dist -type f -printf '%f\n' | sort
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
