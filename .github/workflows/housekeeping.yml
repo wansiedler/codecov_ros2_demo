@@ -1,0 +1,48 @@
+---
+name: Housekeeping
+
+# Draft pull requests skip the heavy workflows, and GitHub records a run shell
+# for every one of those anyway; a newer push cancels the run before it. This
+# deletes both kinds so the Actions list shows runs that did something. Its own
+# workflow, because deleting runs needs `actions: write` and nothing in CI
+# should carry that - the Scorecard Token-Permissions check flags it there.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 5 * * *'   # daily, for the shells no push follows
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: housekeeping-${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  prune-skipped-runs:
+    # Needs the GitHub API, so it only makes sense on GitHub (see release.yml).
+    if: github.actor != 'nektos/act'
+    name: prune skipped runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Delete the skipped and cancelled run shells
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for status in skipped cancelled; do
+            gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?status=$status&per_page=100" \
+              -q '.workflow_runs[].id'
+          done | sort -u > pruned.txt
+          pruned=0
+          while read -r id; do
+            if gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$id" >/dev/null 2>&1; then
+              pruned=$((pruned + 1))
+            fi
+          done < pruned.txt
+          echo "## 🧹 Pruned $pruned skipped or cancelled run shell(s)" >> "$GITHUB_STEP_SUMMARY"
