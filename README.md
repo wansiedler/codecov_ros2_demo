@@ -254,8 +254,11 @@ make docker-shell   # a shell in the workspace: colcon, make, gdb, valgrind
 make docker-build   # rebuild the image after a toolchain change
 ```
 
-`docker-compose.yaml` mounts the checkout as the workspace and keeps `ccache`
-under `~/.cache/perfect_ros2_atomic_package/ccache` between runs.
+`docker-compose.yaml` mounts the checkout as the workspace and keeps `ccache` in
+a named volume between runs. The test run prints a line per package and the
+stderr of whatever failed; `COLCON_EVENTS=console_direct+ make docker-test`
+streams everything the way CI does. A plain `docker compose up` starts the
+workspace only - `test` is a compose profile.
 `.devcontainer/devcontainer.json` attaches VS Code to the same service
 (*Dev Containers: Reopen in Container*). Without registry access, build the CI
 image locally first and point `BASE` at it:

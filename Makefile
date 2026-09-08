@@ -16,6 +16,11 @@ SANITIZE ?= address,undefined
 MEMCHECK_DIR ?= memcheck
 LCOV_IGNORE := mismatch,gcov,unused,empty,negative
 BRANCH_COVERAGE := --rc branch_coverage=1
+# What colcon prints. CI streams everything (the build log feeds the CI
+# report); the compose `test` service sets it empty for colcon's own
+# defaults - a line per package plus the stderr of whatever failed.
+COLCON_EVENTS ?= console_direct+
+colcon_events = $(if $(COLCON_EVENTS),--event-handlers $(COLCON_EVENTS),)
 
 # Every colcon call needs the ROS environment; sourcing it per recipe keeps the
 # targets usable from a plain shell.
@@ -28,12 +33,12 @@ help:  ## Show this list
 
 .PHONY: build
 build:  ## Build the workspace
-	$(ros) colcon build --event-handlers console_direct+ \
+	$(ros) colcon build $(colcon_events) \
 		--cmake-args -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) $(CMAKE_ARGS)
 
 .PHONY: test
 test: build  ## Build and run the tests
-	$(ros) colcon test --event-handlers console_direct+ --packages-select $(PACKAGE)
+	$(ros) colcon test $(colcon_events) --packages-select $(PACKAGE)
 	$(ros) colcon test-result --verbose
 
 # Three targets rather than one: CI runs them as separate steps so that a
@@ -44,12 +49,12 @@ coverage: coverage-build coverage-test coverage-report  ## Build with gcov, run 
 
 .PHONY: coverage-build
 coverage-build:  ## Build with gcov instrumentation
-	$(ros) colcon build --event-handlers console_direct+ \
+	$(ros) colcon build $(colcon_events) \
 		--cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON $(CMAKE_ARGS)
 
 .PHONY: coverage-test
 coverage-test:  ## Run the tests on the instrumented build
-	$(ros) colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
+	$(ros) colcon test $(colcon_events) --ctest-args -R "^test_"
 	$(ros) colcon test-result --verbose
 
 .PHONY: coverage-report
@@ -86,12 +91,12 @@ tidy:  ## Run clang-tidy against the compilation database
 
 .PHONY: sanitize
 sanitize:  ## Build and test under SANITIZE=... (default address,undefined)
-	$(ros) colcon build --event-handlers console_direct+ \
+	$(ros) colcon build $(colcon_events) \
 		--cmake-args -DCMAKE_BUILD_TYPE=Debug "-DSANITIZE=$(SANITIZE)" $(CMAKE_ARGS)
 	ASAN_OPTIONS=detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1 \
 	UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
 	TSAN_OPTIONS=halt_on_error=1 \
-		$(ros) colcon test --event-handlers console_direct+ \
+		$(ros) colcon test $(colcon_events) \
 			--packages-select $(PACKAGE) --ctest-args -R "^test_"
 	$(ros) colcon test-result --verbose
 
@@ -106,7 +111,7 @@ tsan:  ## Shorthand for SANITIZE=thread
 
 .PHONY: memcheck
 memcheck:  ## Run the unit tests under valgrind, write $(MEMCHECK_DIR)/*.xml
-	$(ros) colcon build --event-handlers console_direct+ \
+	$(ros) colcon build $(colcon_events) \
 		--cmake-args -DCMAKE_BUILD_TYPE=Debug $(CMAKE_ARGS)
 	@mkdir -p $(MEMCHECK_DIR); status=0; \
 	for binary in build/$(PACKAGE)/test_*; do \

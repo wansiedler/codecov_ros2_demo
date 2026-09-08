@@ -30,7 +30,7 @@ x-workspace: &workspace
   # DDS discovery between the node and the launch test stays on this machine.
   network_mode: host
   ipc: host
-  environment:
+  environment: &environment
     ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
     CMAKE_ARGS: >-
       -DCMAKE_C_COMPILER_LAUNCHER=ccache
@@ -46,9 +46,17 @@ services:
     tty: true
     command: ["sleep", "infinity"]
 
-  # One-shot test run; the exit status is colcon's.
+  # One-shot test run; the exit status is colcon's. In a profile so that a
+  # plain `docker compose up` starts the workspace only - this one is
+  # `make docker-test` (or `docker compose run --rm test`).
   test:
     <<: *workspace
+    profiles: [test]
+    environment:
+      <<: *environment
+      # colcon's default output: a line per package, stderr of what failed.
+      # COLCON_EVENTS=console_direct+ make docker-test streams everything.
+      COLCON_EVENTS: ""
     command: ["make", "test"]
 
 volumes:
