@@ -104,7 +104,9 @@ and the rclcpp headers are consumed as they are.
    compiler and linker flags, so GCC emits `.gcno` / `.gcda` profiling files.
 2. `colcon test` runs the gtest suites, which fills the `.gcda` counters.
 3. `lcov` collects the counters into `coverage.info` and strips system headers,
-   gtest internals and the test sources themselves.
+   gtest internals and the test sources themselves. This is a separate CI step
+   that runs even when a test failed - the counters are already on disk, and a
+   red run with its coverage is more useful than a red run without.
 4. `codecov/codecov-action@v5` uploads `coverage.info` to Codecov.
 
 `codecov.yml` then enforces two checks on every pull request:
@@ -122,13 +124,14 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | --- | --- | --- |
 | Formatting | `clang-format` pinned to one version for local and CI | pre-commit + `Lint` |
 | Style linting | `cpplint`, `ament_cpplint`, `cmake-lint`, `ament_lint_cmake`, `yamllint`, `actionlint`, `markdownlint`, `shellcheck`, `codespell` | pre-commit + `Lint` |
-| Static analysis | `cppcheck` / `ament_cppcheck`, `clang-tidy` (`.clang-tidy`, warnings are errors) | pre-commit + `Lint` |
+| Static analysis | `cppcheck` / `ament_cppcheck`, `clang-tidy` (`.clang-tidy`, warnings are errors; the findings are also published to code scanning) | pre-commit + `Lint` |
 | Licence headers | `ament_copyright` | `Lint` |
 | Manifests & schemas | `ament_xmllint`, `check-jsonschema` for workflows and Dependabot | pre-commit + `Lint` |
 | Commit hygiene | `commitizen` on the message being written, on the range being pushed, and again in CI; semantic pull request title | pre-commit + `Conventions` |
 | Secrets | `gitleaks` (working tree locally, full history in CI) | pre-commit + `Security` |
 | Code scanning | CodeQL `security-and-quality`, Trivy, Semgrep, OSV-Scanner, OpenSSF Scorecard | `Security` |
 | Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot | `Security` |
+| Workflow hygiene | `zizmor` audits the workflows and composite actions themselves: unpinned actions, template injection, leaked credentials, excess permissions | `Security` |
 | Toolchains | Every push builds with GCC **and** clang, warnings as errors | `CI` |
 | Hardening | `-fstack-protector-strong`, `-fstack-clash-protection`, `-fcf-protection`, `_GLIBCXX_ASSERTIONS`, `_FORTIFY_SOURCE=3`, RELRO and a non-executable stack, each probed before use | build |
 | Integration | `launch_testing` drives the node over real topics | `CI` |
@@ -138,6 +141,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
 | CI report | One page per run in the Actions Summary and as a pull request comment: every suite and failing case, coverage per file with uncovered line ranges and the delta against `main`, compiler warnings, the verdict of each job | `CI` |
+| Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
 | Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
 
@@ -162,7 +166,7 @@ Every tool writes to its own place. This is what each of them answers.
 | Codecov pulls | [/pulls](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/pulls) | Per-pull-request comparison against the base, and the uncovered lines of the diff |
 | Codecov test analytics | [/tests/main](https://app.codecov.io/gh/wansiedler/codecov_ros2_demo/tests/main) | Flaky tests, failure history and test runtimes, fed by the JUnit XML |
 | SonarCloud | [sonarcloud.io](https://sonarcloud.io/dashboard?id=wansiedler_codecov_ros2_demo) | Bugs, code smells, security hotspots, duplication and the technical debt in hours |
-| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner and Scorecard findings, deduplicated per tool |
+| GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner, Scorecard, clang-tidy and zizmor findings, deduplicated per tool |
 | Dependency graph | [/network/dependencies](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
 | Actions | [/actions](https://github.com/wansiedler/codecov_ros2_demo/actions) | Every workflow run, its logs and its artifacts |
 | CI report | The *Summary* tab of a `CI` run, and the `CI report` comment on the pull request | Failing cases with their assertion text, the slowest tests, coverage per file with the exact uncovered lines and the change against `main`, compiler warnings, which job failed on which step |
