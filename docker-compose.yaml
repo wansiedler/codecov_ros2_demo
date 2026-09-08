@@ -1,0 +1,55 @@
+---
+# Local development and test runs in the same image CI uses.
+#
+#   make docker-test     # one-shot: colcon build + colcon test, then exits
+#   make docker-shell    # interactive shell in the workspace
+#   make docker-build    # (re)build the image after a toolchain change
+#
+# The checkout is bind-mounted as the workspace, so build/, install/ and log/
+# land next to src/ exactly as they do on the host, owned by the host user
+# (USER_ID / GROUP_ID come from `id -u` / `id -g` through the Makefile).
+# .devcontainer/devcontainer.json attaches VS Code to the `dev` service.
+
+x-workspace: &workspace
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+    args:
+      BASE: ${BASE:-ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:jazzy}
+      USER_ID: ${USER_ID:-1000}
+      GROUP_ID: ${GROUP_ID:-1000}
+  image: perfect_ros2_atomic_package/dev:jazzy
+  platform: linux/amd64
+  working_dir: /home/dev/ws
+  volumes:
+    - .:/home/dev/ws
+    # ccache survives the container: a rebuild after `git switch` is seconds.
+    # A named volume, not a host directory: docker creates a missing host
+    # directory as root, and the compiler then cannot write to it.
+    - ccache:/home/dev/.ccache
+  # DDS discovery between the node and the launch test stays on this machine.
+  network_mode: host
+  ipc: host
+  environment:
+    ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+    CMAKE_ARGS: >-
+      -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+services:
+  # Interactive workspace. `sleep infinity` keeps it up for VS Code; a shell
+  # is `docker compose run --rm dev` or `docker compose exec dev bash`.
+  dev:
+    <<: *workspace
+    container_name: perfect_ros2_atomic_package-dev
+    stdin_open: true
+    tty: true
+    command: ["sleep", "infinity"]
+
+  # One-shot test run; the exit status is colcon's.
+  test:
+    <<: *workspace
+    command: ["make", "test"]
+
+volumes:
+  ccache:

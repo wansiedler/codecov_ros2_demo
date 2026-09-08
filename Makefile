@@ -138,6 +138,22 @@ requirements:  ## Regenerate the hash-pinned requirement files
 act:  ## Run the lint workflow locally with act
 	act -W .github/workflows/lint.yml
 
+# The container targets pass the host's ids so that build/, install/ and log/
+# in the bind-mounted checkout belong to the person running them.
+compose = USER_ID=$$(id -u) GROUP_ID=$$(id -g) docker compose
+
+.PHONY: docker-build
+docker-build:  ## Build the dev image on top of the CI image
+	$(compose) build dev
+
+.PHONY: docker-test
+docker-test:  ## colcon build + colcon test inside the container, then exit
+	$(compose) run --rm test
+
+.PHONY: docker-shell
+docker-shell:  ## Interactive shell in the container, workspace mounted
+	$(compose) run --rm dev bash
+
 .PHONY: ci
 ci: lint coverage tidy asan memcheck  ## Everything CI runs, in one go
 

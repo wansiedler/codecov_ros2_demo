@@ -1,0 +1,28 @@
+{
+  "name": "perfect_ros2_atomic_package",
+  "dockerComposeFile": ["../docker-compose.yaml"],
+  "service": "dev",
+  "workspaceFolder": "/home/dev/ws",
+  "remoteUser": "dev",
+  "overrideCommand": false,
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "eamodio.gitlens",
+        "ms-python.python",
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.makefile-tools",
+        "redhat.vscode-yaml",
+        "xaver.clang-format"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/build/nav_utils/compile_commands.json",
+        "cmake.configureOnOpen": false
+      }
+    }
+  }
+}
