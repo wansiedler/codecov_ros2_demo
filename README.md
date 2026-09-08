@@ -140,7 +140,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Profiling | Callgrind + `gprof2dot` SVG call graphs, nightly | `Runtime analysis` |
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
-| CI report | One sticky pull-request comment: test counts by class, coverage with its delta against `main`, which jobs failed; earlier reports fold as outdated | `CI` |
+| CI report | One page per run in the Actions Summary and as a pull request comment: every suite and failing case, coverage per file with uncovered line ranges and the delta against `main`, compiler warnings, the verdict of each job | `CI` |
 | Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
 | Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
@@ -169,11 +169,17 @@ Every tool writes to its own place. This is what each of them answers.
 | GitHub code scanning | [/security/code-scanning](https://github.com/wansiedler/codecov_ros2_demo/security/code-scanning) | CodeQL, Semgrep, Trivy, OSV-Scanner, Scorecard, clang-tidy and zizmor findings, deduplicated per tool |
 | Dependency graph | [/network/dependencies](https://github.com/wansiedler/codecov_ros2_demo/network/dependencies) | The SPDX SBOM produced by Syft, and Dependabot alerts against it |
 | Actions | [/actions](https://github.com/wansiedler/codecov_ros2_demo/actions) | Every workflow run, its logs and its artifacts |
+| CI report | The *Summary* tab of a `CI` run, and the `CI report` comment on the pull request | Failing cases with their assertion text, the slowest tests, coverage per file with the exact uncovered lines and the change against `main`, compiler warnings, which job failed on which step |
 | Coverage on Pages | [wansiedler.com/codecov_ros2_demo](http://wansiedler.com/codecov_ros2_demo/) | The browsable lcov report for `main`, line by line |
 
 Rule of thumb: **Codecov** answers *"is the thing I just changed tested?"*,
 **SonarCloud** answers *"how bad is the code and what does fixing it cost?"*,
-and the **Security tab** answers *"what is dangerous about it?"*.
+and the **Security tab** answers *"what is dangerous about it?"*. The **CI
+report** answers *"why is this run red, and what exactly is still untested?"*
+without leaving the pull request - `scripts/ci_report.py` builds it from the
+JUnit XML, the lcov tracefile and the build log, and folds the previous comment
+as outdated on every new run so the current one is always the last in the
+thread.
 
 ### What the CI artifacts contain
 
@@ -183,7 +189,8 @@ Open a run under **Actions**, scroll to *Artifacts* at the bottom of the summary
 | --- | --- | --- |
 | `coverage-html` | `CI` | `genhtml` report: every source file with covered, partially covered and missed lines highlighted, including branch coverage |
 | `test-results` | `CI` | gtest JUnit XML - the same data Codecov test analytics ingests, useful for a local diff of which case failed |
-| `ci-metrics-build` | `CI` | Test counts and coverage percentages as JSON, read from the tracefile and the JUnit XML - what the CI report comment and its delta against `main` are computed from |
+| `ci-report-inputs` | `CI` | The lcov tracefile, the build log and the JUnit XML the `CI report` job reads; uploaded even when the tests failed |
+| `ci-metrics` | `CI` | `report.json`: the totals and per-file coverage of the run. The next run downloads the one from the last successful run on `main` and prints the deltas against it |
 | `valgrind-memcheck` | `Runtime analysis` | One memcheck XML per test binary: leaks, invalid reads and uninitialised values with a full stack. The job log prints a summary of the same data, because `--xml=yes` silences valgrind's own text output |
 | `callgrind-profiles` | `Runtime analysis`, nightly only | Callgrind output plus a rendered SVG call graph - where the time goes, per function |
 | `nav_utils.spdx.json` | `Security` | SPDX SBOM of the workspace, ready for a Dependency-Track style tool |
