@@ -139,6 +139,21 @@ trend:  ## Regenerate docs/coverage-trend.svg from the Codecov API
 requirements:  ## Regenerate the hash-pinned requirement files
 	scripts/lock_requirements.py
 
+# bloom writes debian/ from package.xml - the version the release pull request
+# bumped - and debhelper builds it; the .deb lands next to the package, in
+# src/. Needs python3-bloom, fakeroot, debhelper and dh-python on top of the
+# CI image; the release workflow installs them. Tests already ran in CI on
+# this tree, so the packaging build skips them.
+ROS_DISTRO ?= jazzy
+OS_VERSION ?= noble
+
+.PHONY: deb
+deb:  ## Build the Debian package with bloom, into src/
+	cd src/$(PACKAGE) && rm -rf debian .obj-* \
+		&& $(ros) bloom-generate rosdebian --os-name ubuntu \
+			--os-version $(OS_VERSION) --ros-distro $(ROS_DISTRO) \
+		&& DEB_BUILD_OPTIONS=nocheck fakeroot debian/rules binary
+
 .PHONY: act
 act:  ## Run the lint workflow locally with act
 	act -W .github/workflows/lint.yml
@@ -165,3 +180,4 @@ ci: lint coverage tidy asan memcheck  ## Everything CI runs, in one go
 .PHONY: clean
 clean:  ## Remove the build, install and report directories
 	rm -rf build install log coverage_html coverage.info coverage.base coverage.run
+	rm -rf src/$(PACKAGE)/debian src/$(PACKAGE)/.obj-* src/*.deb src/*.ddeb

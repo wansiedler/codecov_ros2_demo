@@ -33,3 +33,10 @@ scanner.log
 .venv/
 .pytest_cache/
 .mypy_cache/
+
+# `make deb`: bloom writes the packaging into the package, debhelper builds
+# next to it, and the release workflow is the only place either belongs.
+src/*/debian/
+src/*/.obj-*/
+src/*.deb
+src/*.ddeb
