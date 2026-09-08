@@ -135,7 +135,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    needs: image
     container:
       image: semgrep/semgrep:1.173.0
     steps:
