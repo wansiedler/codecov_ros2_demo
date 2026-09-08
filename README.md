@@ -1,7 +1,6 @@
 # perfect_ros2_atomic_package
 
-A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://about.codecov.io/)
-reports test coverage on every commit and pull request.
+A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate perfect CICD.
 
 [![CI](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/ci.yml)
 [![Lint](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/lint.yml)
