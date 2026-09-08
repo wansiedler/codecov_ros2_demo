@@ -340,8 +340,9 @@ jobs:
           mkdir -p inputs baseline
           id=$(artifact_id "$RUN_ID" ci-report-inputs || true)
           if [ -n "$id" ]; then
-            fetch inputs.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" \
-              && unzip -o -q inputs.zip -d inputs || true
+            if fetch inputs.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip"; then
+              unzip -o -q inputs.zip -d inputs
+            fi
           else
             echo "::warning::no ci-report-inputs artifact in this run - the build job did not get that far"
           fi
@@ -353,8 +354,9 @@ jobs:
           if [ -n "$base_run" ]; then
             bid=$(artifact_id "$base_run" ci-metrics || true)
             if [ -n "$bid" ]; then
-              fetch baseline.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$bid/zip" \
-                && unzip -o -q baseline.zip -d baseline || true
+              if fetch baseline.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$bid/zip"; then
+                unzip -o -q baseline.zip -d baseline
+              fi
             fi
           fi
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" \
