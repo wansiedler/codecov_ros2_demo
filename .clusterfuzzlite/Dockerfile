@@ -7,9 +7,9 @@ FROM gcr.io/oss-fuzz-base/base-builder:v1@sha256:8b4a73d83374b298a0a771eeec9a1d4
 
 # Only what the targets need. A recursive copy of the whole workspace would pull
 # in .git and anything else lying around the checkout.
-COPY src/nav_utils/include $SRC/codecov_ros2_demo/src/nav_utils/include
-COPY src/nav_utils/src $SRC/codecov_ros2_demo/src/nav_utils/src
-COPY src/nav_utils/fuzz $SRC/codecov_ros2_demo/src/nav_utils/fuzz
+COPY src/nav_utils/include $SRC/perfect_ros2_atomic_package/src/nav_utils/include
+COPY src/nav_utils/src $SRC/perfect_ros2_atomic_package/src/nav_utils/src
+COPY src/nav_utils/fuzz $SRC/perfect_ros2_atomic_package/src/nav_utils/fuzz
 COPY .clusterfuzzlite/build.sh $SRC/build.sh
 
-WORKDIR $SRC/codecov_ros2_demo
+WORKDIR $SRC/perfect_ros2_atomic_package

@@ -153,7 +153,7 @@ jobs:
               echo "coexist with a CI analysis. Turn it off under"
               echo "*Administration -> Analysis Method* to get C++ analysis and coverage:"
               echo
-              echo "<https://sonarcloud.io/project/analysis_method?id=wansiedler_codecov_ros2_demo>"
+              echo "<https://sonarcloud.io/project/analysis_method?id=wansiedler_perfect_ros2_atomic_package>"
             } >> "$GITHUB_STEP_SUMMARY"
             echo "::warning::SonarCloud Automatic Analysis is enabled; CI analysis skipped."
             exit 0
