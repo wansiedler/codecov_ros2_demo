@@ -1,7 +1,7 @@
 # Generated with scripts/lock_requirements.py - pip --require-hashes
-# Tool: clang-format==22.1.8
+# Tool: clang-format==23.1.0
 
-clang-format==22.1.8 \
+clang-format==23.1.0 \
     --hash=sha256:0223471f781647d476ce0e09a0512521043343313e42932d900f97a15eacb510 \
     --hash=sha256:02ff8ad2e6a60554cc6b9b34310f71adb04da39e94302e08e3a655b77e4dd31c \
     --hash=sha256:07312f8a74bda89b6ce32fae46c589cd7bb210a5d3fb2829a70e28ff449f5b80 \
