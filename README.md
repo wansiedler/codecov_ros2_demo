@@ -1,7 +1,6 @@
 # codecov_ros2_demo
 
-A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate how [Codecov](https://about.codecov.io/)
-reports test coverage on every commit and pull request.
+A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate perfect CICD.
 
 [![CI](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/ci.yml)
 [![Lint](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml/badge.svg)](https://github.com/wansiedler/codecov_ros2_demo/actions/workflows/lint.yml)
