@@ -3,6 +3,7 @@ name: Fuzzing
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: '47 2 * * *'   # nightly batch run over the accumulated corpus
   workflow_dispatch: {}
@@ -16,6 +17,10 @@ concurrency:
 
 jobs:
   fuzzing:
+    # A draft is work in progress: this waits until the pull request is marked
+    # ready (ready_for_review above starts it then), and every job that needs
+    # this one waits with it.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     name: ${{ matrix.sanitizer }}
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -73,7 +73,7 @@ jobs:
             ccache-coverage-
             ccache-
 
-      - name: Build, test and collect coverage
+      - name: Build with coverage instrumentation
         shell: bash
         env:
           CMAKE_ARGS: >-
@@ -83,7 +83,27 @@ jobs:
         # compiler warnings the -Werror builds would have turned into errors.
         run: |
           set -o pipefail
-          make coverage 2>&1 | tee build.log
+          make coverage-build 2>&1 | tee build.log
+
+      - name: Run the tests
+        shell: bash
+        run: |
+          set -o pipefail
+          make coverage-test 2>&1 | tee -a build.log
+
+      # A failing test must not hide the coverage it produced: the counters
+      # are already on disk, and the job stays red from the step above. Only
+      # a cancelled run skips this.
+      - name: Collect the coverage
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          if ! find build -name '*.gcda' -print -quit | grep -q .; then
+            echo "_No instrumented code ran, so there is no coverage to collect._" \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          make coverage-report
 
       # Everything the report job reads: the lcov tracefile, the build log and
       # the JUnit XML. Uploaded even when the tests failed - that is exactly
@@ -101,7 +121,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload the browsable HTML report
-        if: ${{ !env.ACT }}
+        if: ${{ !cancelled() && !env.ACT }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: coverage-html
@@ -157,6 +177,34 @@ jobs:
         with:
           files: build/nav_utils/test_results/nav_utils/*.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Draft pull requests skip the heavy workflows, and GitHub records a run
+  # shell for every one of those anyway. Deleting them (and the runs a newer
+  # push cancelled) keeps the Actions list to runs that did something.
+  prune-skipped-runs:
+    # Needs the GitHub API, so it only makes sense on GitHub (see release.yml).
+    if: github.actor != 'nektos/act'
+    name: prune skipped runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+    steps:
+      - name: Delete the skipped and cancelled run shells
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for status in skipped cancelled; do
+            gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs?status=$status&per_page=100" \
+              -q '.workflow_runs[].id'
+          done | sort -u > pruned.txt
+          pruned=0
+          while read -r id; do
+            if gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$id" >/dev/null 2>&1; then
+              pruned=$((pruned + 1))
+            fi
+          done < pruned.txt
+          echo "## 🧹 Pruned $pruned skipped or cancelled run shell(s)" >> "$GITHUB_STEP_SUMMARY"
 
   compilers:
     name: build with ${{ matrix.compiler }}
@@ -233,19 +281,34 @@ jobs:
           CMAKE_ARGS: -DCMAKE_CXX_STANDARD=26
         run: make build
 
+      # The step environment wins over the CC and CXX the setup exported.
+      - name: Build as C++26
+        shell: bash
+        env:
+          CC: gcc-14
+          CXX: g++-14
+          CMAKE_ARGS: -DCMAKE_CXX_STANDARD=26
+        run: make build
+
   report:
     name: CI report
     # Always runs, after every job it reports on, so a red build still gets
     # its report: the failing cases, the coverage that was collected before
     # the failure, and which job broke.
     needs: [build-test-coverage, compilers, future-standard]
-    if: always()
+    # Needs the GitHub API, so it only makes sense on GitHub (see release.yml).
+    if: always() && github.actor != 'nektos/act'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
       actions: read         # artifacts of this run and of the baseline run
       pull-requests: write  # the sticky comment
+    # Two runs of the same pull request must not both pass the scan for older
+    # comments before either posts, or a stale report ends up at the bottom.
+    concurrency:
+      group: ci-report-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
