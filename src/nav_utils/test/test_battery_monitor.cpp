@@ -105,3 +105,12 @@ TEST(BatteryMonitor, StringifiesEveryState)
   EXPECT_EQ(BatteryMonitor::to_string(BatteryState::Low), "LOW");
   EXPECT_EQ(BatteryMonitor::to_string(BatteryState::Critical), "CRITICAL");
 }
+
+TEST(BatteryMonitor, NamesAStateItDoesNotKnow)
+{
+  // The enumeration is scoped with int as its underlying type, so a value
+  // outside it is representable and a corrupted or newly added state can reach
+  // this function. Naming it UNKNOWN keeps a log line readable instead of
+  // returning an empty string that reads like a missing battery.
+  EXPECT_EQ(BatteryMonitor::to_string(static_cast<BatteryState>(99)), "UNKNOWN");
+}

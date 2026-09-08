@@ -52,6 +52,7 @@ coverage:  ## Build with gcov, run the tests, write coverage_html/
 		--output-file coverage.info --ignore-errors unused $(BRANCH_COVERAGE)
 	lcov --remove coverage.info "*/test/*" \
 		--output-file coverage.info --ignore-errors unused $(BRANCH_COVERAGE)
+	scripts/strip_exception_branches.py coverage.info
 	lcov --list coverage.info $(BRANCH_COVERAGE)
 	genhtml coverage.info --branch-coverage --legend --output-directory coverage_html \
 		--ignore-errors inconsistent,corrupt

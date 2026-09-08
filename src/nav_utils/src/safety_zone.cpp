@@ -37,7 +37,12 @@ Zone SafetyZone::classify(double obstacle_distance) const
 
 double SafetyZone::speed_scale(double obstacle_distance) const
 {
-  switch (classify(obstacle_distance)) {
+  return speed_scale(classify(obstacle_distance));
+}
+
+double SafetyZone::speed_scale(Zone zone)
+{
+  switch (zone) {
     case Zone::Stop:
       return 0.0;
     case Zone::Danger:
