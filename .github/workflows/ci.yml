@@ -79,7 +79,26 @@ jobs:
           CMAKE_ARGS: >-
             -DCMAKE_C_COMPILER_LAUNCHER=ccache
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        run: make coverage
+        # The log is kept for the report job: the coverage build prints the
+        # compiler warnings the -Werror builds would have turned into errors.
+        run: |
+          set -o pipefail
+          make coverage 2>&1 | tee build.log
+
+      # Everything the report job reads: the lcov tracefile, the build log and
+      # the JUnit XML. Uploaded even when the tests failed - that is exactly
+      # when the report is worth reading.
+      - name: Upload the CI report inputs
+        if: always() && !env.ACT
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ci-report-inputs
+          path: |
+            coverage.info
+            build.log
+            build/nav_utils/test_results/**/*.xml
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload the browsable HTML report
         if: ${{ !env.ACT }}
@@ -213,6 +232,110 @@ jobs:
           CXX: g++-14
           CMAKE_ARGS: -DCMAKE_CXX_STANDARD=26
         run: make build
+
+  report:
+    name: CI report
+    # Always runs, after every job it reports on, so a red build still gets
+    # its report: the failing cases, the coverage that was collected before
+    # the failure, and which job broke.
+    needs: [build-test-coverage, compilers, future-standard]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read         # artifacts of this run and of the baseline run
+      pull-requests: write  # the sticky comment
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          sparse-checkout: scripts
+          persist-credentials: false
+
+      - name: Fetch the inputs, the baseline and the job verdicts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          # fetch <out> <api path>: three attempts, so one 5xx or a secondary
+          # rate limit does not turn into a report with no sections.
+          fetch() {
+            local out=$1 path=$2 n
+            for n in 1 2 3; do
+              if gh api "$path" > "$out" 2> fetch.err; then return 0; fi
+              [ "$n" -lt 3 ] && sleep $((n * 10))
+            done
+            echo "::warning::could not fetch $path: $(tr '\n' ' ' < fetch.err | cut -c1-300)"
+            return 1
+          }
+          artifact_id() {  # <run id> <artifact name>
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$1/artifacts?per_page=100" \
+              --jq ".artifacts[] | select(.name == \"$2\") | .id" 2>/dev/null | head -n 1
+          }
+          mkdir -p inputs baseline
+          id=$(artifact_id "$RUN_ID" ci-report-inputs || true)
+          if [ -n "$id" ]; then
+            fetch inputs.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" \
+              && unzip -o -q inputs.zip -d inputs || true
+          else
+            echo "::warning::no ci-report-inputs artifact in this run - the build job did not get that far"
+          fi
+          # Baseline for the deltas: the last successful run of this workflow
+          # on the default branch. Best effort - a miss only drops the deltas.
+          base_run=$(gh api \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=$DEFAULT_BRANCH&status=success&per_page=1" \
+            --jq '.workflow_runs[0].id // empty' 2>/dev/null || true)
+          if [ -n "$base_run" ]; then
+            bid=$(artifact_id "$base_run" ci-metrics || true)
+            if [ -n "$bid" ]; then
+              fetch baseline.zip "repos/$GITHUB_REPOSITORY/actions/artifacts/$bid/zip" \
+                && unzip -o -q baseline.zip -d baseline || true
+            fi
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/jobs?per_page=100" \
+            --jq '[.jobs[] | {name, conclusion, steps: [.steps[] | select(.conclusion == "failure") | .name]}]' \
+            > jobs.json || echo '[]' > jobs.json
+
+      - name: Compose the report, post it to the Summary and the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # The build job ran inside the container, so the paths in the lcov
+          # tracefile and the build log start with its workspace, not this one.
+          BUILD_WORKSPACE: /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          # A push to a branch with an open pull request still refreshes the
+          # comment: resolve the number from the commit.
+          if [ -z "$PR_NUMBER" ]; then
+            PR_NUMBER=$(gh api "repos/$GITHUB_REPOSITORY/commits/$HEAD_SHA/pulls?per_page=1" \
+              --jq '.[0].number // empty' 2>/dev/null || true)
+            export PR_NUMBER
+          fi
+          python3 scripts/ci_report.py \
+            --junit inputs \
+            --lcov inputs/coverage.info \
+            --build-log inputs/build.log \
+            --workspace "$BUILD_WORKSPACE" \
+            --jobs jobs.json \
+            --baseline baseline/report.json \
+            --metrics-out ci-metrics/report.json \
+            --summary "$GITHUB_STEP_SUMMARY" \
+            --post
+
+      # The next run on any branch compares against this file once it comes
+      # from a successful run on the default branch.
+      - name: Upload the metrics for the next run's deltas
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ci-metrics
+          path: ci-metrics/
+          retention-days: 90
 
   publish-coverage-page:
     name: publish coverage to Pages
