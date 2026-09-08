@@ -36,12 +36,24 @@ test: build  ## Build and run the tests
 	$(ros) colcon test --event-handlers console_direct+ --packages-select $(PACKAGE)
 	$(ros) colcon test-result --verbose
 
+# Three targets rather than one: CI runs them as separate steps so that a
+# failing test still gets its coverage collected and uploaded - the counters
+# are already on disk when the test step turns red.
 .PHONY: coverage
-coverage:  ## Build with gcov, run the tests, write coverage_html/
+coverage: coverage-build coverage-test coverage-report  ## Build with gcov, run the tests, write coverage_html/
+
+.PHONY: coverage-build
+coverage-build:  ## Build with gcov instrumentation
 	$(ros) colcon build --event-handlers console_direct+ \
 		--cmake-args -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON $(CMAKE_ARGS)
+
+.PHONY: coverage-test
+coverage-test:  ## Run the tests on the instrumented build
 	$(ros) colcon test --event-handlers console_direct+ --ctest-args -R "^test_"
 	$(ros) colcon test-result --verbose
+
+.PHONY: coverage-report
+coverage-report:  ## Turn the counters the tests left in build/ into coverage_html/
 	lcov --capture --initial --directory build --output-file coverage.base \
 		--ignore-errors $(LCOV_IGNORE) $(BRANCH_COVERAGE)
 	lcov --capture --directory build --output-file coverage.run \
