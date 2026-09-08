@@ -99,7 +99,12 @@ jobs:
           mkdir -p gcov
           find build -name '*.gcda' -exec gcov -p -b {} + > /dev/null
           mv ./*.gcov gcov/ 2>/dev/null || true
-          find gcov -name '*.gcov' | head
+          # Through a file, not a pipe: `find | head` under pipefail ends in
+          # SIGPIPE (exit 141) as soon as there are more files than head
+          # prints, which is every run here.
+          find gcov -name '*.gcov' > gcov.list
+          echo "$(wc -l < gcov.list) gcov files, for example:"
+          head gcov.list
 
       - name: Run memcheck for the Valgrind issue import
         if: steps.config.outputs.enabled == 'true'
