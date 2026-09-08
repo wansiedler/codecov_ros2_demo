@@ -142,7 +142,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | CI report | One page per run in the Actions Summary and as a pull request comment: every suite and failing case, coverage per file with uncovered line ranges and the delta against `main`, compiler warnings, the verdict of each job | `CI` |
 | Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI`, `Housekeeping` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
-| Releases | release-please: changelog and tags from the Conventional Commits; every release ships a source tarball, an SPDX SBOM and checksums, each signed keylessly with cosign, plus SLSA build provenance | `Release` |
+| Releases | release-please: changelog, tags and the version in `package.xml` from the Conventional Commits, release candidates from `release/**` branches; every release ships a source tarball, an SPDX SBOM and checksums, each signed keylessly with cosign, plus SLSA build provenance | `Release` |
 
 CodeQL, Trivy, Semgrep, OSV-Scanner and Scorecard publish SARIF, so their
 findings land in the repository's **Security → Code scanning** tab instead of
@@ -153,6 +153,26 @@ Two jobs need a secret before they do anything: `CODECOV_TOKEN` for the upload
 and `SONAR_TOKEN` for SonarCloud. The SonarCloud job skips itself with an
 explanatory summary when the token is absent, so the rest of the pipeline stays
 green.
+
+### Cutting a release
+
+Nothing is tagged by hand. `release-please` keeps one pull request open against
+`main` - *chore(main): release x.y.z* - and rewrites it on every push: the
+version comes from the Conventional Commits since the last tag (`fix:` → patch,
+`feat:` → minor, `feat!:` or a `BREAKING CHANGE:` footer → major), the changelog
+from their subjects. Merging that pull request **is** the release: the tag, the
+GitHub release and the signed assets follow from it.
+
+| To | Do |
+| --- | --- |
+| Ship what is on `main` | Merge the open release pull request |
+| Force a version - a hotfix, skipping a number | Put `Release-As: 1.2.3` in the footer of any commit on the branch; the next release pull request uses it |
+| Start a release candidate line | Push a `release/<name>` branch: the same workflow runs with `.github/release-please-rc.json`, so the versions carry `-rc.N` and the GitHub release is marked prerelease |
+
+`release-please-config.json` lists the files that carry the version -
+`CHANGELOG.md` and `src/nav_utils/package.xml` - so the tag, the manifest and
+the package never disagree. `.release-please-manifest.json` records the last
+version released; release-please maintains it, do not edit it by hand.
 
 ### Where to look at the results
 

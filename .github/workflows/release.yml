@@ -3,7 +3,10 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      # A release candidate line: the same pipeline, prerelease versions.
+      - 'release/**'
   workflow_dispatch: {}
 
 # Deny everything by default; each job grants only what it needs.
@@ -27,12 +30,22 @@ jobs:
       pull-requests: write
     steps:
       # Reads the Conventional Commits since the last tag, maintains a release
-      # pull request with the generated CHANGELOG, and tags on merge.
+      # pull request with the generated CHANGELOG and the version bumps, and
+      # tags on merge. release-please-config.json says which files carry the
+      # version (package.xml among them) and .release-please-manifest.json
+      # records the last version released. A `release/**` branch runs the same
+      # pipeline with the rc config: prerelease versions, prerelease flag on the
+      # GitHub release. To force a version, put `Release-As: 1.2.3` in a commit
+      # footer on the branch; the action has no input for it in manifest mode.
       - id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
-          release-type: simple
-          package-name: nav_utils
+          target-branch: ${{ github.ref_name }}
+          config-file: >-
+            ${{ startsWith(github.ref_name, 'release/')
+                && '.github/release-please-rc.json'
+                || 'release-please-config.json' }}
+          manifest-file: .release-please-manifest.json
     outputs:
       created: ${{ steps.release.outputs.release_created }}
       tag: ${{ steps.release.outputs.tag_name }}
