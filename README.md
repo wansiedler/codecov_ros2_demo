@@ -141,7 +141,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Coverage | gcov → lcov (line **and branch**) → Codecov, HTML artifact, GitHub Pages | `CI` |
 | Test results | JUnit XML artifact + Codecov test analytics (flaky test detection) | `CI` |
 | CI report | One sticky pull-request comment: test counts by class, coverage with its delta against `main`, which jobs failed; earlier reports fold as outdated | `CI` |
-| Draft pull requests | Fuzzing, runtime analysis, SonarCloud, CodeQL and Semgrep wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI` |
+| Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
 | Releases | release-please: changelog and tags from the Conventional Commits | `Release` |
 
