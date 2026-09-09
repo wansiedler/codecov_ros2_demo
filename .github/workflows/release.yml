@@ -7,7 +7,15 @@ on:
       - main
       # A release candidate line: the same pipeline, prerelease versions.
       - 'release/**'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: >-
+          Existing release tag to (re)build the artifacts for, e.g.
+          nav_utils-v1.0.0. Skips release-please; for a release whose
+          artifact jobs failed.
+        type: string
+        default: ''
 
 # Deny everything by default; each job grants only what it needs.
 permissions: {}
@@ -38,6 +46,7 @@ jobs:
       # GitHub release. To force a version, put `Release-As: 1.2.3` in a commit
       # footer on the branch; the action has no input for it in manifest mode.
       - id: release
+        if: inputs.tag == ''
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7  # v5.0.0
         with:
           target-branch: ${{ github.ref_name }}
@@ -46,9 +55,12 @@ jobs:
                 && '.github/release-please-rc.json'
                 || 'release-please-config.json' }}
           manifest-file: .release-please-manifest.json
+    # With a tag given by hand the release-please step is skipped and the
+    # outputs carry the tag through, so the artifact jobs run for an
+    # existing release.
     outputs:
-      created: ${{ steps.release.outputs.release_created }}
-      tag: ${{ steps.release.outputs.tag_name }}
+      created: ${{ steps.release.outputs.release_created == 'true' || inputs.tag != '' }}
+      tag: ${{ inputs.tag || steps.release.outputs.tag_name }}
 
   # The toolchain the release is built with. `jazzy` is a moving tag - the
   # weekly image rebuild moves it - so the digest it resolves to right now is
@@ -121,7 +133,13 @@ jobs:
 
       # Not in the CI image: nothing but a release needs them, and the image
       # is pulled by every job of every run.
+      # rosdep's cache is baked into the image under /root/.ros, but a
+      # container job runs with HOME=/github/home, where bloom finds no
+      # sources ("rosdep database does not have any sources"). Point it at
+      # the baked cache rather than fetch it again.
       - name: Install the packaging tools
+        env:
+          ROS_HOME: /root/.ros
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
@@ -129,6 +147,8 @@ jobs:
           rm -rf /var/lib/apt/lists/*
 
       - name: Build the package
+        env:
+          ROS_HOME: /root/.ros
         run: make deb
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -170,7 +190,9 @@ jobs:
 
       - name: Pack the sources at the tag
         run: |
-          name="nav_utils-${TAG#v}"
+          # nav_utils-v1.0.0 -> nav_utils-1.0.0 (a bare v1.0.0 works too)
+          version="${TAG##*-v}"
+          name="nav_utils-${version#v}"
           mkdir -p dist
           git archive --format=tar.gz --prefix="$name/" -o "dist/$name.tar.gz" "$TAG"
           echo "NAME=$name" >> "$GITHUB_ENV"
