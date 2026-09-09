@@ -240,5 +240,7 @@
   "test_branch_coverage80_status": "Met",
   "test_branch_coverage80_justification": "98 % branch coverage with gcov exception edges excluded (lcov, Codecov).",
   "hardened_site_status": "Met",
-  "hardened_site_justification": "Project site and repository are on github.com, which serves HSTS, CSP, X-Content-Type-Options and X-Frame-Options."
+  "hardened_site_justification": "Project site and repository are on github.com, which serves HSTS, CSP, X-Content-Type-Options and X-Frame-Options.",
+  "dco_status": "Met",
+  "dco_justification": "https://github.com/wansiedler/perfect_ros2_atomic_package/blob/main/CONTRIBUTING.md#developer-certificate-of-origin - Signed-off-by required by the commit-msg hook and checked on every pull request commit in CI."
 }
