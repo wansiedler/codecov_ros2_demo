@@ -23,10 +23,10 @@ concurrency:
 
 jobs:
   image:
-    # A draft is work in progress: this waits until the pull request is marked
-    # ready (ready_for_review above starts it then), and every job that needs
-    # this one waits with it.
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # Not draft-gated, unlike the other heavy workflows: CodeQL is the SAST
+    # record of every commit that reaches main, and a pull request merged
+    # straight from draft would otherwise land without one (Scorecard's SAST
+    # check counts exactly that).
     name: resolve the CI image
     runs-on: ubuntu-latest
     timeout-minutes: 15
