@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/wansiedler/perfect_ros2_atomic_package/compare/nav_utils-v1.0.1...nav_utils-v1.0.2) (2026-09-09)
+
+
+### Bug Fixes
+
+* **dco:** exempt GitHub's bot commits from the sign-off check ([#78](https://github.com/wansiedler/perfect_ros2_atomic_package/issues/78)) ([ec92d0e](https://github.com/wansiedler/perfect_ros2_atomic_package/commit/ec92d0e9fa90053b0462342caef4b9074c8de043))
+* **dco:** exempt merge commits from the sign-off check ([#76](https://github.com/wansiedler/perfect_ros2_atomic_package/issues/76)) ([85fe5e6](https://github.com/wansiedler/perfect_ros2_atomic_package/commit/85fe5e6cbe302cd29cecda28f0c8d2b48b512090))
+
 ## [1.0.1](https://github.com/wansiedler/perfect_ros2_atomic_package/compare/nav_utils-v1.0.0...nav_utils-v1.0.1) (2026-09-09)
 
 
