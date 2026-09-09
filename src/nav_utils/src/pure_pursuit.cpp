@@ -81,10 +81,10 @@ std::optional<Point2D> PurePursuit::lookahead_point(const Pose2D & pose) const
   // From there, the first point at least one lookahead away; the goal itself
   // when the remaining path is shorter than that, so the robot drives it out.
   const auto ahead = std::ranges::subrange(closest, path_.end());
-  const auto found = std::ranges::find_if(ahead, [this, &pose](const Point2D & point) {
+  const auto beyond_lookahead = [this, &pose](const Point2D & point) {
     return distance(point, pose) >= config_.lookahead;
-  });
-  if (found != ahead.end()) {
+  };
+  if (const auto found = std::ranges::find_if(ahead, beyond_lookahead); found != ahead.end()) {
     return *found;
   }
   return path_.back();
