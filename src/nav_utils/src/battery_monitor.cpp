@@ -51,14 +51,15 @@ double BatteryMonitor::percent_from_voltage(double pack_voltage) const
 
 BatteryState BatteryMonitor::update(double pack_voltage)
 {
+  using enum BatteryState;
   percent_ = percent_from_voltage(pack_voltage);
 
   if (percent_ <= thresholds_.critical_percent) {
-    state_ = BatteryState::Critical;
+    state_ = Critical;
   } else if (percent_ <= thresholds_.low_percent) {
-    state_ = BatteryState::Low;
+    state_ = Low;
   } else {
-    state_ = BatteryState::Ok;
+    state_ = Ok;
   }
 
   return state_;
@@ -67,11 +68,12 @@ BatteryState BatteryMonitor::update(double pack_voltage)
 std::string BatteryMonitor::to_string(BatteryState state)
 {
   switch (state) {
-    case BatteryState::Ok:
+    using enum BatteryState;
+    case Ok:
       return "OK";
-    case BatteryState::Low:
+    case Low:
       return "LOW";
-    case BatteryState::Critical:
+    case Critical:
       return "CRITICAL";
   }
   return "UNKNOWN";
