@@ -33,8 +33,11 @@ def check_range(rev_range: str) -> int:
         check=True,
     ).stdout
     bad = []
-    for record in filter(None, out.split("\x1e")):
-        sha, subject, body = record.lstrip("\n").split("\x00", 2)
+    for record in out.split("\x1e"):
+        record = record.strip()
+        if not record:
+            continue
+        sha, subject, body = record.split("\x00", 2)
         if not check_message(body):
             bad.append(f"  {sha[:7]} {subject}")
     if bad:

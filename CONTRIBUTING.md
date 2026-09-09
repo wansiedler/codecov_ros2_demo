@@ -32,8 +32,8 @@ git commit -s
 ```
 
 That adds a `Signed-off-by: Your Name <you@example.com>` trailer, by which you
-certify the [Developer Certificate of Origin](https://developercertificate.org)
-- that you wrote the change or have the right to submit it under the project's
+certify the [Developer Certificate of Origin](https://developercertificate.org):
+that you wrote the change or have the right to submit it under the project's
 Apache-2.0 license. No CLA, no paperwork: the trailer is the assertion. The
 `commit-msg` hook rejects a commit without it, and the `Conventions` workflow
 checks every commit of a pull request.
