@@ -25,7 +25,9 @@ def check(path: pathlib.Path) -> str | None:
     except OSError as error:
         return str(error)
     text = "\n".join(head)
-    missing = [what for what, needle in (("copyright", "Copyright"), ("SPDX", SPDX)) if needle not in text]
+    missing = [
+        what for what, needle in (("copyright", "Copyright"), ("SPDX", SPDX)) if needle not in text
+    ]
     return f"missing {' and '.join(missing)} in the first {HEAD_LINES} lines" if missing else None
 
 
