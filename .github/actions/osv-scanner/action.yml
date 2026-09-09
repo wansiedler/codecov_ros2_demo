@@ -1,0 +1,26 @@
+---
+name: Install osv-scanner
+description: >
+  Puts a pinned osv-scanner release on the PATH. Three workflows scan with it
+  - the sources on every push, the SBOM of a release as it is published, and
+  the SBOM of the last release again every night - and one place to move the
+  version beats three copies of the same curl.
+
+inputs:
+  version:
+    description: The osv-scanner release to install.
+    required: false
+    default: 2.5.1
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/osv-scanner \
+          "https://github.com/google/osv-scanner/releases/download/v${VERSION}/osv-scanner_linux_amd64"
+        sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
+        osv-scanner --version

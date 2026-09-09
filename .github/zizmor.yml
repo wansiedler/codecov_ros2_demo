@@ -17,3 +17,7 @@ rules:
       - runtime-analysis.yml
       - security.yml
       - sonarcloud.yml
+      # The Debian package is built in the image the release job just
+      # retagged, addressed by the digest that job resolved; a digest chosen
+      # at run time is still an expression to the audit.
+      - release.yml
