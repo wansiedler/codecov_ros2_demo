@@ -36,6 +36,7 @@ A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate perfect CICD.
 [![Fuzzing](https://img.shields.io/badge/fuzzing-ClusterFuzzLite-CC3333)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/fuzzing.yml)
 [![Valgrind](https://img.shields.io/badge/valgrind-memcheck%20%C2%B7%20callgrind-6E4C1E)](https://github.com/wansiedler/perfect_ros2_atomic_package/actions/workflows/runtime-analysis.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](https://github.com/wansiedler/perfect_ros2_atomic_package/blob/main/LICENSE)
+[![Code of Conduct](https://img.shields.io/badge/code%20of%20conduct-Contributor%20Covenant%202.1-5e0d73)](CODE_OF_CONDUCT.md)
 
 ## Coverage at a glance
 

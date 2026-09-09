@@ -132,5 +132,7 @@
   "dynamic_analysis_enable_assertions_status": "Met",
   "dynamic_analysis_enable_assertions_justification": "Tests and sanitizer builds are Debug builds with assert() enabled and _GLIBCXX_ASSERTIONS on; release builds drop them.",
   "dynamic_analysis_fixed_status": "Met",
-  "dynamic_analysis_fixed_justification": "No outstanding dynamic-analysis findings; any would block the pull request."
+  "dynamic_analysis_fixed_justification": "No outstanding dynamic-analysis findings; any would block the pull request.",
+  "code_of_conduct_status": "Met",
+  "code_of_conduct_justification": "https://github.com/wansiedler/perfect_ros2_atomic_package/blob/main/CODE_OF_CONDUCT.md - Contributor Covenant 2.1 with an enforcement contact."
 }
