@@ -6,7 +6,8 @@
 The sign-off is the `Signed-off-by: Name <email>` trailer `git commit -s`
 adds; by adding it the author certifies https://developercertificate.org.
 As a commit-msg hook this checks the message being written; in CI it checks
-every commit of the pull request range.
+every commit of the pull request range. Merge commits are exempt - GitHub
+writes them, and the contributions they carry were each signed off already.
 
 Usage: scripts/check_dco.py MESSAGE_FILE        (pre-commit, commit-msg stage)
        scripts/check_dco.py --range BASE..HEAD  (CI)
@@ -27,7 +28,9 @@ def check_message(text: str) -> bool:
 
 def check_range(rev_range: str) -> int:
     out = subprocess.run(  # nosec B603 B607 - fixed argv
-        ["git", "log", "--format=%H%x00%s%x00%B%x1e", rev_range],
+        # Merge commits are exempt: GitHub writes them ("Update branch", the
+        # merge button) and nobody authored the contribution they carry.
+        ["git", "log", "--no-merges", "--format=%H%x00%s%x00%B%x1e", rev_range],
         capture_output=True,
         text=True,
         check=True,
