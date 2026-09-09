@@ -64,4 +64,5 @@ jobs:
           PYTHON_RUFF_CONFIG_FILE: ruff.toml
 
           # Build products and vendored reports are not ours to lint.
-          FILTER_REGEX_EXCLUDE: (build|install|log|coverage_html|memcheck)/.*
+          # CHANGELOG.md is release-please's, regenerated on every release.
+          FILTER_REGEX_EXCLUDE: (build|install|log|coverage_html|memcheck)/.*|CHANGELOG\.md

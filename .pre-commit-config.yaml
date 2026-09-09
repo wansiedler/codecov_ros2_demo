@@ -97,6 +97,9 @@ repos:
     rev: v0.49.1
     hooks:
       - id: markdownlint
+        # release-please writes CHANGELOG.md; its lines are as long as the
+        # commit subjects and the links, and it is regenerated on every release.
+        exclude: ^CHANGELOG\.md$
 
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.11.0
