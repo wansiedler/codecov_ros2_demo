@@ -113,6 +113,87 @@ the operating system under it. A defect in `rclcpp` or the DDS vendor is
 outside what this project can test; it is inside what Dependabot and
 OSV-Scanner watch.
 
+## Policies
+
+### Dependencies: how they are chosen, obtained and tracked
+
+- **Chosen** - a dependency is added only when the package cannot reasonably
+  do without it, and only from the ROS 2 distribution or Ubuntu itself; no
+  vendored copies, no dependency pulled from an unreviewed source.
+- **Obtained** - `package.xml` names the direct dependencies as rosdep keys;
+  the CI image resolves them with `rosdep` and `apt` from the ROS and Ubuntu
+  archives, the base image is pinned by digest, every GitHub Action by commit
+  hash, every pip tool by version and wheel hash.
+- **Tracked** - Dependabot proposes updates daily (actions, docker digests,
+  pre-commit hooks, pip); every release ships an SPDX SBOM listing what was
+  built in; OSV-Scanner and Trivy scan the tree on every pull request and
+  weekly, and the SBOM at release time.
+
+### Secrets and credentials
+
+- The project holds two long-lived secrets: `CODECOV_TOKEN` and `SONAR_TOKEN`,
+  both write-only upload tokens for a third-party dashboard. Everything else
+  is the job-scoped `GITHUB_TOKEN`, minted per run and expired with it, or a
+  keyless OIDC identity (cosign, attestations) that never exists as a file.
+- They are stored only as GitHub Actions repository secrets, readable by no
+  one, injected only into the jobs that upload. Runs from forks and from
+  Dependabot receive none of them; those jobs skip the upload instead.
+- Nothing secret enters the tree: `gitleaks` runs as a pre-commit hook and
+  over the full history in CI, and GitHub secret scanning with push protection
+  rejects a push that carries a known credential shape.
+- Rotation: a token is rotated when the maintainer changes, when the dashboard
+  provider reports an incident, on any suspicion of exposure, and otherwise
+  once a year. Rotating is creating the new token on the provider and
+  replacing the repository secret; no code changes.
+
+### Coordinated vulnerability disclosure
+
+- **Report** privately through
+  [GitHub private vulnerability reporting](https://github.com/wansiedler/perfect_ros2_atomic_package/security/advisories/new);
+  see [SECURITY.md](../SECURITY.md).
+- **Acknowledge** within 5 working days; **assess and answer** (confirmed,
+  not a vulnerability, or out of scope) within 15 working days.
+- **Fix** confirmed vulnerabilities within 90 days of the report, sooner for
+  anything exploitable from a topic; the fix ships in a release whose
+  changelog names the advisory.
+- **Disclose** together: the advisory is published when the fixed release is
+  out, or at 90 days, whichever comes first; the reporter is credited unless
+  they ask not to be.
+- **Published data** - every advisory, fixed or not, is public on the
+  repository's [security advisories](https://github.com/wansiedler/perfect_ros2_atomic_package/security/advisories)
+  page with its CVE identifier when one is assigned.
+
+### Remediation thresholds
+
+Findings are triaged by severity as the tool reports it (CVSS for dependency
+findings, the scanner's own level for static analysis). "Fixed" means the fix
+is on `main`; "recorded as not exploitable" means dismissed on GitHub with a
+written justification.
+
+| Source | Critical / high | Medium | Low |
+| --- | --- | --- | --- |
+| Dependencies (Dependabot, OSV-Scanner, Trivy) | fixed or recorded as not exploitable within 14 days; blocks a release while open | 30 days | 90 days |
+| Static analysis (CodeQL, Semgrep, clang-tidy, cppcheck, SonarCloud) | fixed before the pull request merges | 30 days | next release |
+| Dependency licenses | only OSI-approved licenses compatible with Apache-2.0; a violation blocks the pull request | | |
+
+Enforcement is automatic where a tool can do it: clang-tidy and the compiler
+warnings are errors; Trivy and OSV-Scanner fail a pull request that adds a
+dependency with a known vulnerability; CodeQL, Semgrep and Trivy findings
+land in code scanning and the required checks; Socket Security evaluates every
+dependency change for malicious behaviour; the release job scans the SBOM
+with OSV-Scanner and records the result in its Summary. A finding a tool
+cannot block on is blocked by the reviewer, who checks the code scanning
+page before merging.
+
+### Vulnerabilities that do not affect the project
+
+When a scanner reports a vulnerability in a component that the project does
+not use in the affected way, it is recorded as not exploitable with the
+reason, and published as an [OpenVEX](https://openvex.dev) statement under
+`docs/vex/` together with the release it applies to, so downstream scanners
+can suppress it with the same justification. There is no such statement yet:
+no reported vulnerability has been found not to apply.
+
 ## Verifying a release
 
 Every release ships a source tarball, a Debian package, an SPDX SBOM and
