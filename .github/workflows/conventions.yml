@@ -39,6 +39,14 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: cz check --rev-range "$BASE_SHA..$HEAD_SHA"
 
+      # The Developer Certificate of Origin: every commit carries the
+      # Signed-off-by trailer `git commit -s` adds. See CONTRIBUTING.md.
+      - name: Check every commit for a DCO sign-off
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: scripts/check_dco.py --range "$BASE_SHA..$HEAD_SHA"
+
   pull-request-title:
     name: pull request title
     runs-on: ubuntu-latest

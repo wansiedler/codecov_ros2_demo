@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Regenerate the hash-pinned requirement files used by the workflows.
 
 OpenSSF Scorecard's pinned-dependencies check wants pip installs pinned by

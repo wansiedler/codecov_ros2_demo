@@ -1,3 +1,6 @@
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
+
 # ClusterFuzzLite builds the fuzz targets inside the OSS-Fuzz base image, which
 # ships clang with libFuzzer and the sanitizer runtimes. That image builds as
 # root by design - the tooling writes to $SRC and $OUT - and it compiles and

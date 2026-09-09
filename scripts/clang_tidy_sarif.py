@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Turn a clang-tidy log into SARIF for the Security tab.
 
 clang-tidy has no SARIF writer of its own, and the log it prints is enough:
