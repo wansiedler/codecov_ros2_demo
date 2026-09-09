@@ -15,7 +15,6 @@ x-workspace: &workspace
     context: .
     dockerfile: docker/Dockerfile
     args:
-      BASE: ${BASE:-ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:jazzy}
       USER_ID: ${USER_ID:-1000}
       GROUP_ID: ${GROUP_ID:-1000}
   image: perfect_ros2_atomic_package/dev:jazzy

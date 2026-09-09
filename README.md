@@ -323,7 +323,8 @@ image locally first and point `BASE` at it:
 
 ```bash
 docker build -f .github/docker/ci.Dockerfile -t local/ci:jazzy .
-BASE=local/ci:jazzy make docker-test
+docker compose build --build-arg BASE=local/ci:jazzy dev
+make docker-test
 ```
 
 ## Running the tests locally

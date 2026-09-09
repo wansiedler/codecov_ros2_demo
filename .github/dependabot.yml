@@ -42,6 +42,7 @@ updates:
     directories:
       - /.github/docker
       - /.clusterfuzzlite
+      - /docker
     schedule:
       interval: weekly
     cooldown:
