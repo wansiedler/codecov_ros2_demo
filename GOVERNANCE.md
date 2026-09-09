@@ -20,6 +20,23 @@ maintainer's own: the branch is protected, the pull request must be up to date
 and every required check green before it can merge. What a review looks for is
 written down in [CONTRIBUTING.md](CONTRIBUTING.md#code-review).
 
+## Access to sensitive resources
+
+| Resource | Who has access | How it is granted |
+| --- | --- | --- |
+| Repository settings, branch protection, secrets | the maintainer (admin) | GitHub repository admin |
+| Merging to `main`, releases, tags | the maintainer | `CODEOWNERS` review + branch protection |
+| GHCR package `perfect_ros2_atomic_package/ci` | the maintainer, and the release workflow through its `GITHUB_TOKEN` | repository-linked package |
+| Codecov, SonarCloud, OpenSSF badge entry | the maintainer | provider accounts tied to the GitHub identity |
+
+Anyone with any of these has two-factor authentication on their GitHub
+account; GitHub requires it for every contributor to a public repository. A
+new collaborator gets no permission by default (GitHub's read-only default).
+Write access is granted only by the maintainer, after the person has landed
+reviewed contributions and the maintainer has reviewed their account and
+intent; admin access only to a co-maintainer named in this file. Access is
+removed when the person stops contributing for a year.
+
 ## Decisions
 
 - **Scope and design** - proposed in an issue or a pull request, decided by
@@ -35,8 +52,12 @@ written down in [CONTRIBUTING.md](CONTRIBUTING.md#code-review).
 
 ## Supported versions and upgrades
 
-Only the latest release is supported. A fix lands on `main` and ships in the
-next release; there are no maintenance branches for older versions. Breaking
+Only the latest release is supported, for as long as it is the latest: a
+security fix ships as a new release, never as a patch to an older one, so an
+older release stops receiving security updates the moment its successor is
+published. Its assets stay available, its changelog says what changed after
+it. A fix lands on `main` and ships in the next release; there are no
+maintenance branches for older versions. Breaking
 changes are announced in [CHANGELOG.md](CHANGELOG.md) under *BREAKING CHANGES*
 with what changed in the interface and what a user has to do, so an upgrade
 from any earlier release is one read of the changelog.
