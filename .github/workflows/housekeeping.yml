@@ -6,6 +6,10 @@ name: Housekeeping
 # deletes both kinds so the Actions list shows runs that did something. Its own
 # workflow, because deleting runs needs `actions: write` and nothing in CI
 # should carry that - the Scorecard Token-Permissions check flags it there.
+#
+# The nightly run also rescans the SBOM of the last release: a CVE published
+# after the release lands in the Security tab against the version people
+# actually run, not only against main.
 
 on:
   push:
@@ -46,3 +50,73 @@ jobs:
             fi
           done < pruned.txt
           echo "## 🧹 Pruned $pruned skipped or cancelled run shell(s)" >> "$GITHUB_STEP_SUMMARY"
+
+  rescan-release-sbom:
+    # The release pipeline scanned this SBOM once, when it was written; the
+    # database has moved since. Schedule and dispatch only: a push has no new
+    # release to look at.
+    if: >-
+      github.actor != 'nektos/act'
+      && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    name: rescan the release SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read           # read the release assets
+      security-events: write   # publish the SARIF
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/actions/osv-scanner
+
+      - name: Fetch the SBOM of the latest release
+        id: sbom
+        run: |
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "## 🔎 No release to rescan yet" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern '*.spdx.json' --dir sbom
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - if: steps.sbom.outputs.tag != ''
+        uses: ./.github/actions/osv-scanner
+
+      - name: Scan it against today's database
+        if: steps.sbom.outputs.tag != ''
+        env:
+          TAG: ${{ steps.sbom.outputs.tag }}
+        run: |
+          set +e
+          osv-scanner scan source --lockfile sbom/*.spdx.json \
+            --format sarif --output-file osv-release.sarif
+          code=$?
+          set -e
+          # An empty runs array is rejected by the SARIF upload API, so fall
+          # back to a single run with no results (see security.yml).
+          [ -s osv-release.sarif ] || cat > osv-release.sarif <<'SARIF'
+          {
+            "version": "2.1.0",
+            "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+            "runs": [
+              {"tool": {"driver": {"name": "osv-scanner", "rules": []}}, "results": []}
+            ]
+          }
+          SARIF
+          findings=$(jq '[.runs[].results[]] | length' osv-release.sarif)
+          echo "## 🔎 ${TAG} SBOM rescanned: ${findings} finding(s)" >> "$GITHUB_STEP_SUMMARY"
+          case "$code" in
+            0 | 1) exit 0 ;;
+            *) exit "$code" ;;
+          esac
+
+      - name: Publish results to the Security tab
+        if: steps.sbom.outputs.tag != ''
+        uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938  # v4.37.9
+        with:
+          sarif_file: osv-release.sarif
+          category: osv-release-sbom
