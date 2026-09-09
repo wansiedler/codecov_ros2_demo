@@ -129,6 +129,11 @@ repos:
 
   - repo: local
     hooks:
+      - id: dco-sign-off
+        name: Signed-off-by trailer (Developer Certificate of Origin)
+        entry: scripts/check_dco.py
+        language: python
+        stages: [commit-msg]
       - id: spdx-headers
         name: copyright and SPDX identifier in every source file
         entry: scripts/check_spdx.py
