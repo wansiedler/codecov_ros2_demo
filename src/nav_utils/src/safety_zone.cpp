@@ -43,13 +43,14 @@ double SafetyZone::speed_scale(double obstacle_distance) const
 double SafetyZone::speed_scale(Zone zone)
 {
   switch (zone) {
-    case Zone::Stop:
+    using enum Zone;
+    case Stop:
       return 0.0;
-    case Zone::Danger:
+    case Danger:
       return 0.25;
-    case Zone::Warning:
+    case Warning:
       return 0.6;
-    case Zone::Clear:
+    case Clear:
       return 1.0;
   }
   return 0.0;
