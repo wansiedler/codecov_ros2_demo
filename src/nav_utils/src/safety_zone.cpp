@@ -24,16 +24,17 @@ SafetyZone::SafetyZone(const ZoneRadii & radii) : radii_(radii) {}
 
 Zone SafetyZone::classify(double obstacle_distance) const
 {
+  using enum Zone;
   if (obstacle_distance <= radii_.stop) {
-    return Zone::Stop;
+    return Stop;
   }
   if (obstacle_distance <= radii_.danger) {
-    return Zone::Danger;
+    return Danger;
   }
   if (obstacle_distance <= radii_.warning) {
-    return Zone::Warning;
+    return Warning;
   }
-  return Zone::Clear;
+  return Clear;
 }
 
 double SafetyZone::speed_scale(double obstacle_distance) const
