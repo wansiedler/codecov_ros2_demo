@@ -50,8 +50,14 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: '3.12'
+      # The hosted runner ships third-party apt sources (Google Chrome,
+      # Microsoft) that this job never installs from, and one of them serving a
+      # stale index fails the whole update. Update from Ubuntu only.
       - name: Install tools used by the local hooks
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cppcheck
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome* /etc/apt/sources.list.d/microsoft*
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cppcheck
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd  # v3.0.1
 
   clang-format:
