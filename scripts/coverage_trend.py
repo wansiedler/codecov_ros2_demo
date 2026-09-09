@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Render a coverage trend chart from the Codecov commit history.
 
 Codecov's own trend chart reads an aggregated timeseries that is only

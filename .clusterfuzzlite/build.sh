@@ -1,4 +1,6 @@
 #!/bin/bash -eu
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 # Builds every fuzz target against the ROS-free core of the package.
 #
 # nav_utils_core has no rclcpp dependency on purpose, so the targets compile

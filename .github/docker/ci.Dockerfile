@@ -1,3 +1,6 @@
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
+
 # Prebuilt CI image for this workspace.
 #
 # Every job used to spend 150-340 s in "Set up the workspace" running the same

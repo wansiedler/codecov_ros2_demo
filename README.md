@@ -117,6 +117,19 @@ and the rclcpp headers are consumed as they are.
 | `project` | Total coverage must not drop more than 1 % below the base commit. |
 | `patch` | At least 80 % of the lines *changed in the PR* must be covered. |
 
+## Project documents
+
+| Document | What it answers |
+| --- | --- |
+| [docs/architecture.md](docs/architecture.md) | What the package is made of and how the pieces connect |
+| [docs/security.md](docs/security.md) | What the software promises, the threat model, the assurance case, how to verify a release |
+| [docs/reproducible-build.md](docs/reproducible-build.md) | Why two builds of a commit are bit-for-bit identical, and `make reproducible` |
+| [GOVERNANCE.md](GOVERNANCE.md) | Who decides what, supported versions, continuity |
+| [ROADMAP.md](ROADMAP.md) | What the project will and will not do this year |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Commit convention, coding standards, test policy, what a review checks |
+| [SECURITY.md](SECURITY.md) | How to report a vulnerability |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 |
+
 ## Quality gates
 
 Everything below runs on every pull request; the slow jobs also run on a schedule.

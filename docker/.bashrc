@@ -1,3 +1,6 @@
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
+
 # shellcheck shell=bash
 # Interactive shell in the dev container. Non-interactive invocations (the
 # compose `test` service, `docker compose exec dev make ...`) return here at

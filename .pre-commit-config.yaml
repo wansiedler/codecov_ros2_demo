@@ -129,6 +129,11 @@ repos:
 
   - repo: local
     hooks:
+      - id: spdx-headers
+        name: copyright and SPDX identifier in every source file
+        entry: scripts/check_spdx.py
+        language: python
+        files: \.(cpp|hpp|py|sh|bashrc)$|(^|/)(Makefile|CMakeLists\.txt|Dockerfile|ci\.Dockerfile|build\.sh)$
       - id: cppcheck
         name: cppcheck
         description: Static analysis of the C++ sources.

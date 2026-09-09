@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Remove gcov's exception edges from an lcov tracefile.
 
 GCC records, for every call that could throw, a branch for the path taken when

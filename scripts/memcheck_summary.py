@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Print a readable summary of valgrind memcheck XML reports.
 
 valgrind --xml=yes silences its own text output, so without this a memcheck run

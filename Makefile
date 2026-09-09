@@ -1,3 +1,6 @@
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
+
 # Task runner for the workspace. The build system is colcon; this only wraps the
 # commands so that what runs locally is what runs in CI, spelled the same way.
 #
@@ -173,6 +176,19 @@ docker-test:  ## colcon build + colcon test inside the container, then exit
 .PHONY: docker-shell
 docker-shell:  ## Interactive shell in the container, workspace mounted
 	$(compose) run --rm dev bash
+
+.PHONY: reproducible
+reproducible:  ## Build twice from scratch in the container; fail if any binary differs
+	$(compose) run --rm dev bash -c '\
+	  set -e; source /opt/ros/jazzy/setup.bash; \
+	  for i in 1 2; do \
+	    rm -rf build install log; \
+	    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
+	      -DCMAKE_C_COMPILER_LAUNCHER= -DCMAKE_CXX_COMPILER_LAUNCHER= >/dev/null; \
+	    (cd build/$(PACKAGE) && sha256sum libnav_utils_core.a velocity_limiter_node test_*) > build-$$i.sums; \
+	  done; \
+	  diff build-1.sums build-2.sums && echo "reproducible: $$(wc -l < build-1.sums) binaries identical"; \
+	  rm -f build-1.sums build-2.sums'
 
 .PHONY: ci
 ci: lint coverage tidy asan memcheck  ## Everything CI runs, in one go

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 # Sources the ROS underlay and, when the workspace has been built, its overlay,
 # then runs whatever the caller asked for - an interactive shell by default,
 # `make test` from the compose `test` service.

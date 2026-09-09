@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
 """Compose the CI report: run Summary, sticky pull request comment, metrics JSON.
 
 Reads what the build + test + coverage job left behind and turns it into one

@@ -1,3 +1,6 @@
+# Copyright 2026 Alexander Paul Wansiedler
+# SPDX-License-Identifier: Apache-2.0
+
 # Development image: the CI image plus a user.
 #
 # The CI image (.github/docker/ci.Dockerfile, published by ci-image.yml) carries
