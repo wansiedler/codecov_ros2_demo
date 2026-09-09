@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/wansiedler/perfect_ros2_atomic_package/compare/nav_utils-v1.0.0...nav_utils-v1.0.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **release:** let bloom find rosdep's cache, name the tarball after the version, rebuild by tag ([#63](https://github.com/wansiedler/perfect_ros2_atomic_package/issues/63)) ([ee6d81b](https://github.com/wansiedler/perfect_ros2_atomic_package/commit/ee6d81bea12b6d68eef6e9b4529d7b4087b76e93))
+
 ## 1.0.0 (2026-09-09)
 
 
