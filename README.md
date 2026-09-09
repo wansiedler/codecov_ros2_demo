@@ -22,6 +22,7 @@ A minimal ROS 2 (Jazzy) C++ workspace used to demonstrate perfect CICD.
 [![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=wansiedler_perfect_ros2_atomic_package&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=wansiedler_perfect_ros2_atomic_package)
 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/wansiedler/perfect_ros2_atomic_package/badge)](https://scorecard.dev/viewer/?uri=github.com/wansiedler/perfect_ros2_atomic_package)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14559/badge)](https://www.bestpractices.dev/projects/14559)
 [![CodeQL](https://img.shields.io/badge/CodeQL-security--and--quality-2088FF?logo=github)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ACodeQL)
 [![Semgrep](https://img.shields.io/badge/Semgrep-p%2Fdefault%20%C2%B7%20p%2Fc%20%C2%B7%20p%2Fsecrets-1B2B34?logo=semgrep)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ASemgrep)
 [![Trivy](https://img.shields.io/badge/Trivy-vuln%20%C2%B7%20secret%20%C2%B7%20misconfig-1904DA?logo=aqua)](https://github.com/wansiedler/perfect_ros2_atomic_package/security/code-scanning?query=is%3Aopen+tool%3ATrivy)
