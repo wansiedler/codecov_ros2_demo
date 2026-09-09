@@ -171,11 +171,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
+      - uses: ./.github/actions/osv-scanner
+
       - name: Scan the sources for known vulnerabilities
         run: |
-          curl --proto '=https' --tlsv1.2 -sSfL -o /tmp/osv-scanner \
-            https://github.com/google/osv-scanner/releases/download/v2.5.1/osv-scanner_linux_amd64
-          sudo install /tmp/osv-scanner /usr/local/bin/osv-scanner
           # Exit 0 means nothing found and 1 means findings, both reported
           # through SARIF; 128 means no supported manifest exists, which is the
           # normal case for a pure C++ workspace. Anything else is a failure.

@@ -129,7 +129,7 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | Commit hygiene | `commitizen` on the message being written, on the range being pushed, and again in CI; semantic pull request title | pre-commit + `Conventions` |
 | Secrets | `gitleaks` (working tree locally, full history in CI) | pre-commit + `Security` |
 | Code scanning | CodeQL `security-and-quality`, Trivy, Semgrep, OSV-Scanner, OpenSSF Scorecard | `Security` |
-| Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot | `Security` |
+| Supply chain | SPDX SBOM via Syft + GitHub dependency snapshot, Dependabot; the CI image carries SLSA provenance from the run that built it | `Security`, `CI image` |
 | Workflow hygiene | `zizmor` audits the workflows and composite actions themselves: unpinned actions, template injection, leaked credentials, excess permissions | `Security` |
 | Toolchains | Every push builds with GCC **and** clang, warnings as errors | `CI` |
 | Hardening | `-fstack-protector-strong`, `-fstack-clash-protection`, `-fcf-protection`, `_GLIBCXX_ASSERTIONS`, `_FORTIFY_SOURCE=3`, RELRO and a non-executable stack, each probed before use | build |
@@ -142,7 +142,8 @@ Everything below runs on every pull request; the slow jobs also run on a schedul
 | CI report | One page per run in the Actions Summary and as a pull request comment: every suite and failing case, coverage per file with uncovered line ranges and the delta against `main`, compiler warnings, the verdict of each job | `CI` |
 | Draft pull requests | Fuzzing, runtime analysis, SonarCloud and CodeQL wait until the pull request is marked ready; the run shells GitHub records for the skipped ones are pruned | `CI`, `Housekeeping` |
 | Quality gate | SonarCloud (bugs, smells, security hotspots, technical debt) plus imported Valgrind Memcheck findings | `SonarCloud` |
-| Releases | release-please: changelog and tags from the Conventional Commits; every release ships a source tarball, an SPDX SBOM and checksums, each signed keylessly with cosign, plus SLSA build provenance | `Release` |
+| Releases | release-please: changelog, tags and the version in `package.xml` from the Conventional Commits, release candidates from `release/**` branches; every release ships a source tarball, the Debian package bloom builds in the release image, an SPDX SBOM and checksums, each signed keylessly with cosign, plus SLSA build provenance; the CI image is retagged with the version and signed; a verify job replays the consumer-side checks before the release counts | `Release` |
+| Release SBOM | OSV scans the SBOM as the release is cut, and again every night against the current database, into the Security tab | `Release`, `Housekeeping` |
 
 CodeQL, Trivy, Semgrep, OSV-Scanner and Scorecard publish SARIF, so their
 findings land in the repository's **Security → Code scanning** tab instead of
@@ -153,6 +154,61 @@ Two jobs need a secret before they do anything: `CODECOV_TOKEN` for the upload
 and `SONAR_TOKEN` for SonarCloud. The SonarCloud job skips itself with an
 explanatory summary when the token is absent, so the rest of the pipeline stays
 green.
+
+### Cutting a release
+
+Nothing is tagged by hand. `release-please` keeps one pull request open against
+`main` - *chore(main): release x.y.z* - and rewrites it on every push: the
+version comes from the Conventional Commits since the last tag (`fix:` → patch,
+`feat:` → minor, `feat!:` or a `BREAKING CHANGE:` footer → major), the changelog
+from their subjects. Merging that pull request **is** the release: the tag, the
+GitHub release and the signed assets follow from it.
+
+| To | Do |
+| --- | --- |
+| Ship what is on `main` | Merge the open release pull request |
+| Force a version - a hotfix, skipping a number | Put `Release-As: 1.2.3` in the footer of any commit on the branch; the next release pull request uses it |
+| Start a release candidate line | Push a `release/<name>` branch: the same workflow runs with `.github/release-please-rc.json`, so the versions carry `-rc.N` and the GitHub release is marked prerelease |
+
+`release-please-config.json` lists the files that carry the version -
+`CHANGELOG.md` and `src/nav_utils/package.xml` - so the tag, the manifest and
+the package never disagree. `.release-please-manifest.json` records the last
+version released; release-please maintains it, do not edit it by hand.
+
+#### What a release contains
+
+| Asset | Made by | What it is |
+| --- | --- | --- |
+| `nav_utils-x.y.z.tar.gz` | `git archive` at the tag | The sources, exactly the tagged tree |
+| `ros-jazzy-nav-utils_x.y.z-0noble_amd64.deb` | `make deb`: bloom + debhelper, inside the release image | Installs into `/opt/ros/jazzy`; `apt install ./ros-jazzy-nav-utils_*.deb` on Ubuntu 24.04 with ROS 2 Jazzy |
+| `nav_utils-x.y.z.spdx.json` | Syft | SPDX SBOM of the tree, scanned by OSV at release and nightly after |
+| `nav_utils-x.y.z.sha256sums` | `sha256sum` | Checksums of the three above |
+| `*.sigstore.json` | `cosign sign-blob` | One keyless signature bundle per asset, bound to the workflow's OIDC identity, logged in Rekor |
+| `nav_utils-x.y.z.intoto.jsonl` | `actions/attest-build-provenance` | SLSA build provenance: which workflow, at which commit, produced which bytes |
+| `ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:vx.y.z` | `release.yml` retags the digest `jazzy` resolved to | The toolchain image the release was built in, signed; its provenance comes from the `CI image` run that built it |
+
+#### Verifying a release
+
+The `verify` job of the `Release` workflow runs these on a clean runner
+before the release is declared done; a consumer runs the same.
+
+```bash
+gh release download v1.0.0 --repo wansiedler/perfect_ros2_atomic_package --dir v1.0.0
+cd v1.0.0
+sha256sum -c ./*.sha256sums
+for bundle in *.sigstore.json; do
+  cosign verify-blob --bundle "$bundle" "${bundle%.sigstore.json}" \
+    --certificate-identity-regexp '^https://github.com/wansiedler/perfect_ros2_atomic_package/' \
+    --certificate-oidc-issuer https://token.actions.githubusercontent.com
+done
+gh attestation verify ros-jazzy-nav-utils_*.deb --repo wansiedler/perfect_ros2_atomic_package
+gh attestation verify oci://ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:v1.0.0 \
+  --repo wansiedler/perfect_ros2_atomic_package
+```
+
+The identity regexp is the whole point: it says *signed by a workflow of this
+repository*, not *signed by someone who had a key*. Rebuild the package from
+the tarball in the image the tag names and the bytes should match the `.deb`.
 
 ### Where to look at the results
 
@@ -170,6 +226,8 @@ Every tool writes to its own place. This is what each of them answers.
 | Actions | [/actions](https://github.com/wansiedler/perfect_ros2_atomic_package/actions) | Every workflow run, its logs and its artifacts |
 | CI report | The *Summary* tab of a `CI` run, and the `CI report` comment on the pull request | Failing cases with their assertion text, the slowest tests, coverage per file with the exact uncovered lines and the change against `main`, compiler warnings, which job failed on which step |
 | Coverage on Pages | [wansiedler.com/perfect_ros2_atomic_package](http://wansiedler.com/perfect_ros2_atomic_package/) | The browsable lcov report for `main`, line by line |
+| Releases | [/releases](https://github.com/wansiedler/perfect_ros2_atomic_package/releases) | Every version with its changelog, the signed assets and the `.deb`; the `verify` job of the run that cut it shows the checks |
+| Packages | [/pkgs/container/perfect_ros2_atomic_package%2Fci](https://github.com/wansiedler/perfect_ros2_atomic_package/pkgs/container/perfect_ros2_atomic_package%2Fci) | The CI image: the moving `jazzy` tag, a tag per release, the signatures and the provenance next to each digest |
 
 Rule of thumb: **Codecov** answers *"is the thing I just changed tested?"*,
 **SonarCloud** answers *"how bad is the code and what does fixing it cost?"*,
