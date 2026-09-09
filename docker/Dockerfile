@@ -9,11 +9,13 @@
 # bind-mounted checkout stays writable on both sides, sudo, a debugger, and an
 # entrypoint that sources ROS.
 #
+# Pinned by digest, like the CI image's own base: the jazzy tag moves on every
+# weekly rebuild, and Dependabot proposes the new digest as a reviewable change.
 # BASE is overridable for a machine without registry access: build the CI image
 # locally and point at it -
 #   docker build -f .github/docker/ci.Dockerfile -t local/ci:jazzy .
-#   BASE=local/ci:jazzy docker compose build
-ARG BASE=ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:jazzy
+#   docker compose build --build-arg BASE=local/ci:jazzy dev
+ARG BASE=ghcr.io/wansiedler/perfect_ros2_atomic_package/ci:jazzy@sha256:472a3bb696b3adf78215c05736f0c27c17cc7ed7f78c6588094cc2d2cce7a54c
 # hadolint ignore=DL3006
 FROM ${BASE}
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
